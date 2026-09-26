@@ -18,9 +18,9 @@
 <p>Isometric builds a whole 2:1 pixel art scene out of flat textures: one node maps a texture onto a face of a cube, the next turns six faces into a solid, others raise a floor, a whole terrain, or a village of instances on top of it. Everything in the category shares one lattice, one shading table and one outline rule, so a solid and a floor built from different nodes still read as the same scene when composited together.</p>
 <p>Two units run through the geometry nodes: Percent, which scales with the canvas the way the rest of Spaghetti does, and Pixels, which locks a tile to an exact width so a whole tileset comes out at a fixed size regardless of canvas resolution. The last shelf, Voxel, is a different kind of node: it builds a small cube model instead of an image, and only Voxel Render turns that model into pixels, from any of eight directions.</p>
 <hr>
-<h2>Iso Grid</h2>
-<p><img src="./gifs/isogrid.gif" alt="Iso Grid demo" width="256" height="256"></p>
-<p><em>Draws the 2:1 isometric lattice as lines, diamonds, dots or one wireframe cube.</em></p>
+<h2 id="isogrid">Iso Grid</h2>
+<p><img src="./graphs/isogrid.gif" alt="Iso Grid node graph" width="244" height="300"></p>
+<p><strong>Draws the 2:1 isometric lattice as lines, diamonds, dots or one wireframe cube.</strong></p>
 <p>Iso Grid draws the 2:1 isometric lattice itself, a guide layer to draw on top of rather than art in its own right. <strong>Mode</strong> picks Lines, Diamonds, each rhombus filled solid, Dots, one mark per lattice point, or Cube, a single wireframe cube instead of a repeating lattice.</p>
 <p><strong>Projection</strong> switches the slope: 2:1 Dimetric is the pixel art standard, a 2-1 stair step and the default; True Iso is the real 30 degree isometric angle and steps unevenly in pixels; Military 1:1 is a 45 degree plan view. <strong>Unit</strong> decides whether the lattice is set by <strong>Tiles X</strong> and <strong>Tiles Y (0=auto)</strong> as a percentage of the canvas, or by an exact <strong>Tile width</strong> in pixels that does not change with canvas resolution, the setting to use when the grid has to match a specific tileset.</p>
 <p><strong>Subdivide</strong> adds finer lines inside each cell, for marking quarter or eighth steps by hand. In Cube mode, <strong>Size %</strong>, <strong>Height %</strong> and <strong>Anchor</strong> replace the tile controls, drawing one wireframe box instead of a repeating floor, useful for checking a prop's footprint against the lattice before modelling it as a real solid.</p>
@@ -45,9 +45,9 @@
 <li><strong>Background</strong>: colour, default #ffffff, keyable</li>
 </ul>
 <hr>
-<h2>Iso Plane</h2>
-<p><img src="./gifs/isoplane.gif" alt="Iso Plane demo" width="256" height="256"></p>
-<p><em>Maps a texture on to one plane of the isometric cube, or reads one back out flat.</em></p>
+<h2 id="isoplane">Iso Plane</h2>
+<p><img src="./graphs/isoplane.gif" alt="Iso Plane node graph" width="432" height="322"></p>
+<p><strong>Maps a texture on to one plane of the isometric cube, or reads one back out flat.</strong></p>
 <p>Iso Plane maps a flat texture onto one face of the isometric cube, or reads one back out flat with <strong>Mode</strong> set to Unproject. <strong>Plane</strong> picks which of the six faces, Top, Left, Right, Bottom and the two back faces, used mostly for outputs like Normal or Height where the hidden faces still matter.</p>
 <p>In Project mode, <strong>Shading</strong> and <strong>Light</strong> apply the category's one shared shading table to the mapped texture, so a plane and a full Iso Solid built from the same source read as one surface. <strong>Rotation</strong> turns the whole cube, snapped to the four sides at 0, 90, 180 and 270 unless <strong>Free rotation</strong> is on, and <strong>Mapping</strong> decides how the source texture's resolution lands on the diamond: Fit stretches it to the whole face, Tile keeps 1:1 texel to screen pixel scale along the edges, and Pixel keeps the tile's native resolution regardless of how big the face draws on screen.</p>
 <p>Unproject is the useful inverse: feed it a rendered isometric tile and it reads the flat texture back out of whichever plane you point at, exact on the two wall faces and close, not exact, on the top, since the top's diamond grid does not line up one to one with square pixels.</p>
@@ -80,9 +80,9 @@
 <li><strong>Empty face</strong>: colour, default #ffffff, only when mode = Project, keyable</li>
 </ul>
 <hr>
-<h2>Depth</h2>
-<p><img src="./gifs/depth.gif" alt="Depth demo" width="256" height="256"></p>
-<p><em>Gives a flat texture thickness and opens the top and side bands.</em></p>
+<h2 id="depth">Depth</h2>
+<p><img src="./graphs/depth.gif" alt="Depth node graph" width="432" height="462"></p>
+<p><strong>Gives a flat texture thickness and opens the top and side bands.</strong></p>
 <p>Depth gives a flat texture thickness by opening a top band and a side band out of the same solid, the classic wall-of-a-tileset trick: the front stays the texture you painted, and the top and side are the same texture squashed into the bands the camera angle opens up. It is not a 3D rotation of the picture, each face is its own flat parallelogram.</p>
 <p><strong>Tilt (top)</strong> is the pitch: 0 keeps the view straight on with no top band at all, 90 looks straight down and opens the top fully. <strong>Turn (side)</strong> is the yaw, deciding which side opens up and which way the front shears; positive and negative values open opposite sides. <strong>Depth %</strong> sets the slab's thickness as a percentage of the canvas height, so a thin wall reads as a lip and a thick one as a real block.</p>
 <p>Wire different textures into the front, top and side inputs for a wall whose cap is different stone from its face; leave the top and side inputs empty and Depth reuses the front texture for all three, still correctly angled and shaded by <strong>Face shading</strong>. The whole solid stretches to fill the canvas, so a tile stays edge to edge at any Tilt or Turn.</p>
@@ -97,9 +97,9 @@
 <li><strong>Empty face</strong>: colour, default #ffffff, keyable</li>
 </ul>
 <hr>
-<h2>Iso Solid</h2>
-<p><img src="./gifs/isosolid.gif" alt="Iso Solid demo" width="256" height="256"></p>
-<p><em>Builds one of thirteen isometric solids, a texture and a value per face.</em></p>
+<h2 id="isosolid">Iso Solid</h2>
+<p><img src="./graphs/isosolid.gif" alt="Iso Solid node graph" width="400" height="708"></p>
+<p><strong>Builds one of thirteen isometric solids, a texture and a value per face.</strong></p>
 <p>Iso Solid builds one of thirteen shapes, Cube, ramps, corners, stairs, a wedge, a hex prism, a cylinder, a cone, a dome and more, out of up to six face textures, one per side. At rotation 0 you see the front texture on the screen-left rhombus and the right texture on the screen-right one, matching how an isometric game usually frames an object.</p>
 <p>Leave a face input unwired and it falls back to the flat <strong>Empty face</strong> colour, so a fresh node already reads as a shaded solid before any texture is wired at all. <strong>Shape</strong> picks the form; <strong>Steps</strong> only applies to the two Stairs shapes, and <strong>Slices</strong> with <strong>Bands (0=smooth)</strong> only to the three turned shapes, Cylinder, Cone, Dome, where Bands is the same posterize-the-curve control the rest of Lighting uses, never a smooth gradient by default.</p>
 <p><strong>Light</strong> flips which side, Left or Right, reads brighter, and <strong>Outline</strong> adds a one pixel rim, either Darker, darkening whatever colour is already there, or a flat <strong>Outline colour</strong>. <strong>Output</strong> switches the whole node to hand back Normal, Height, Mask or ID instead of Color, which is how this feeds Light, Shadow or Occlusion without a second render: build the solid once, tap it for however many channels downstream needs.</p>
@@ -134,9 +134,9 @@
 <li><strong>Empty face</strong>: colour, default #ffffff, keyable</li>
 </ul>
 <hr>
-<h2>Iso Lathe</h2>
-<p><img src="./gifs/isolathe.gif" alt="Iso Lathe demo" width="256" height="256"></p>
-<p><em>Turns a profile around the vertical axis: columns, vases, barrels, domes.</em></p>
+<h2 id="isolathe">Iso Lathe</h2>
+<p><img src="./graphs/isolathe.gif" alt="Iso Lathe node graph" width="466" height="322"></p>
+<p><strong>Turns a profile around the vertical axis: columns, vases, barrels, domes.</strong></p>
 <p>Iso Lathe turns a profile around the vertical axis, the same operation that makes a column, a vase, a barrel or a dome out of one curve. <strong>Profile</strong> picks one of seven built in shapes, Column, Barrel, Vase, Bell, Tower, Cone, Dome, when nothing is wired to the Profile input; wire a vector path in instead and the node reads it as its own radius curve, x as radius and y as height, both normalised to the curve's own bounding box.</p>
 <p><strong>Slices</strong> sets how many wedges the lathe divides its turn into, and <strong>Bands (0=smooth)</strong> posterises the curved shading into flat steps the way the rest of the category does for anything round, worth turning up, 4 to 6, rather than leaving at the smooth default if the result needs to read as pixel art rather than a render.</p>
 <p><strong>Taper</strong> narrows or widens the profile from top to bottom, negative values tapering toward the top and positive toward the bottom, on top of whatever the profile curve itself already does. Everything else, <strong>Light</strong>, <strong>Outline</strong>, <strong>Output</strong>, works the same as on Iso Solid, since both nodes share the same renderer underneath.</p>
@@ -167,9 +167,9 @@
 <li><strong>Colour</strong>: colour, default #ffffff, keyable</li>
 </ul>
 <hr>
-<h2>Iso Prism</h2>
-<p><img src="./gifs/isoprism.gif" alt="Iso Prism demo" width="256" height="256"></p>
-<p><em>Extrudes a mask silhouette into an isometric solid, walls and lid textured apart.</em></p>
+<h2 id="isoprism">Iso Prism</h2>
+<p><img src="./graphs/isoprism.gif" alt="Iso Prism node graph" width="432" height="462"></p>
+<p><strong>Extrudes a mask silhouette into an isometric solid, walls and lid textured apart.</strong></p>
 <p>Iso Prism extrudes a mask's silhouette into an isometric solid, with the walls and the lid textured separately. Feed it a mask from Vector Fill, Text, or any generator, and it becomes a solid block in the shape of that silhouette instead of a fixed primitive, which is what turns the whole Vector category into volume.</p>
 <p>The top input fills the lid over the whole footprint and the side input runs along the walls a texel per pixel, so a brick texture on the walls actually reads as bricks going around the shape rather than stretched flat. With nothing wired to the mask input, the footprint defaults to one full tile, and the result is a Cube to the byte, so a fresh Iso Prism is a safe starting point before a real silhouette is wired in.</p>
 <p><strong>Height</strong> sets how far down from the top face the shape extrudes; past 200 the walls get tall enough to read as a tower rather than a block. This is the node behind carving a logo, a letter or a hex tile into a solid: Vector Text into Fill into Iso Prism gives a word standing up with a stone top in three nodes.</p>
@@ -199,9 +199,9 @@
 <li><strong>No texture</strong>: colour, default #ffffff, keyable</li>
 </ul>
 <hr>
-<h2>Iso Floor</h2>
-<p><img src="./gifs/isofloor.gif" alt="Iso Floor demo" width="256" height="256"></p>
-<p><em>Stamps a texture on every rhombus of the isometric lattice, and tiles.</em></p>
+<h2 id="isofloor">Iso Floor</h2>
+<p><img src="./graphs/isofloor.gif" alt="Iso Floor node graph" width="902" height="344"></p>
+<p><strong>Stamps a texture on every rhombus of the isometric lattice, and tiles.</strong></p>
 <p>Iso Floor stamps one texture into every rhombus of the isometric lattice and repeats it, the ground plane of an isometric scene. Tiling wins over the exact geometry: the lattice periods are set to divide the canvas exactly, <strong>Tiles X</strong> and <strong>Tiles Y (0=auto)</strong>, so the result always repeats cleanly even if that means the diamond's aspect is not quite the chosen <strong>Projection</strong>'s true angle.</p>
 <p><strong>Thickness</strong> carves a joint or mortar line between rhombi, filled with <strong>Mortar</strong>; leave it at 0 for a floor with no visible seams at all, or push it up for cobbles or flagstones with grout lines between them. <strong>Bevel</strong> lights the two upper edges of each rhombus and darkens the two lower ones, the same shared shading the rest of the category uses, and reads as a slight lift per tile rather than a real height difference.</p>
 <p>Wire an atlas texture into the second input and it wins over the plain texture on the first slot: <strong>Atlas cols</strong> and <strong>Atlas rows</strong> split it into variants, picked per cell either <strong>Random</strong>, hashed by <strong>Seed</strong> so the same seed always gives the same floor, or in <strong>Sequence</strong>, which is how a cobbled or broken floor avoids reading as one stamp repeated everywhere. <strong>Random flip</strong> and <strong>Random turn</strong> add more variety within that same guarantee of tiling.</p>
@@ -229,9 +229,9 @@
 <li><strong>Mortar</strong>: colour, default #000000, only when part = Color, keyable</li>
 </ul>
 <hr>
-<h2>Iso Terrain</h2>
-<p><img src="./gifs/isoterrain.gif" alt="Iso Terrain demo" width="256" height="256"></p>
-<p><em>Raises an isometric column per cell, with slopes, water and textured lids.</em></p>
+<h2 id="isoterrain">Iso Terrain</h2>
+<p><img src="./graphs/isoterrain.gif" alt="Iso Terrain node graph" width="410" height="480"></p>
+<p><strong>Raises an isometric column per cell, with slopes, water and textured lids.</strong></p>
 <p>Iso Terrain raises an isometric column per cell of a height map, the node that turns a height field into actual ground rather than a flat floor. The wired height map is read as luminance per cell and <strong>Terraces</strong> steps it into that many flat plateaus; a cell whose height pixel is fully transparent is skipped entirely, which is how you punch a hole or a cliff edge straight into the field.</p>
 <p><strong>Slopes</strong> turns the hard steps between terraces into ramps, at <strong>Slope height %</strong> of a full level, for rolling ground instead of a staircase of plateaus. <strong>Water level</strong> floods every cell below that terrace with the <strong>Water</strong> colour, and above the water line the terrain reads as usual, so a single node gives a lake sitting inside a landscape.</p>
 <p>Wire a colour image in for a tone per column, a Gradient Map of the same height map is the obvious source, and texture images into the top and side face inputs instead of a flat colour on each. <strong>Max height %</strong> sets how tall the tallest column reaches, and <strong>Shading</strong> with <strong>Light</strong> apply the category's one shared table. This is the one node here that genuinely does not tile: columns lean out past the top edge with nothing to wrap around from the bottom, since cells paint back to front and depend on their neighbours' height.</p>
@@ -258,9 +258,9 @@
 <li><strong>No colour input</strong>: colour, default #ffffff, keyable</li>
 </ul>
 <hr>
-<h2>Iso Tileset</h2>
-<p><img src="./gifs/isotileset.gif" alt="Iso Tileset demo" width="256" height="256"></p>
-<p><em>Renders a whole isometric tileset sheet -- floor, blocks, ramps, corners -- out of two textures.</em></p>
+<h2 id="isotileset">Iso Tileset</h2>
+<p><img src="./graphs/isotileset.gif" alt="Iso Tileset node graph" width="478" height="344"></p>
+<p><strong>Renders a whole isometric tileset sheet -- floor, blocks, ramps, corners -- out of two textures.</strong></p>
 <p>Iso Tileset renders a whole sheet of tileset pieces, floor, blocks, ramps, corners, out of two textures, rather than one texture at a time. It is not a separate renderer: every cell is an Iso Solid drawing one of its own shapes at <strong>Tile width</strong> pixels with the same lamp and outline, which is why a tile cut from this sheet sits next to a loose Iso Solid without reading as two different scenes.</p>
 <p><strong>Sheet</strong> picks the piece list: Blocks 16, floor, cube, half cube, pillar, four ramps, four outer corners, four inner corners, one level, or Terrain 32, the same sixteen plus a second, raised level of ramps and corners and four wedges. <strong>Level height</strong> sets how tall one terrace step reads in pixels, which matters most on Terrain 32's two-level pieces.</p>
 <p><strong>Piece (0=sheet)</strong> pulls one cell out instead of drawing the whole sheet, indexed the same way an atlas node reads cells, useful for previewing a single piece or animating through the set one frame at a time. Everything else, <strong>Light</strong>, <strong>Outline</strong>, <strong>Output</strong>, matches Iso Solid, since a level is defined as a quarter of Tile width: a 45 degree ramp lands at half height in this 2:1 projection, the rule every reference tileset in the genre uses.</p>
@@ -281,9 +281,9 @@
 <li><strong>No texture</strong>: colour, default #ffffff, keyable</li>
 </ul>
 <hr>
-<h2>Iso Place</h2>
-<p><img src="./gifs/isoplace.gif" alt="Iso Place demo" width="256" height="256"></p>
-<p><em>Plants a sprite on every lit cell of a map, back to front on the isometric lattice.</em></p>
+<h2 id="isoplace">Iso Place</h2>
+<p><img src="./graphs/isoplace.gif" alt="Iso Place node graph" width="808" height="344"></p>
+<p><strong>Plants a sprite on every lit cell of a map, back to front on the isometric lattice.</strong></p>
 <p>Iso Place plants a sprite on every lit cell of a map, painted back to front on the isometric lattice so a nearer instance always covers a farther one, the same order Iso Terrain uses for its own columns. <strong>Map means</strong> decides what the map's luminance is read as: Presence places one instance per lit cell, Elevation reads it as a terrace and lifts each instance <strong>Level height</strong> pixels per level, a village climbing a raised terrain, and Atlas cell reads it as an index into the sprite input, seen as an <strong>Atlas cols</strong> by <strong>Atlas rows</strong> grid, which is how three different tree sprites come out of one sheet.</p>
 <p><strong>Tiles X (0=map)</strong> left at 0 turns the map itself into the grid, one pixel one cell, for placing instances at whatever resolution the map was drawn at rather than a separate tile count. <strong>Scale %</strong> sets each instance's size and <strong>Jitter %</strong> randomises it slightly per cell, seeded by <strong>Seed</strong>, for a scattered village or forest instead of a rigid grid of identical props.</p>
 <p>I run this over an Iso Terrain built from the same map, since both read the same lattice: the instances land exactly where the terrain columns are, without a second coordinate system to keep in sync.</p>
@@ -308,9 +308,9 @@
 <li><strong>Offset Y %</strong>: -100 .. 100, default 0, keyable</li>
 </ul>
 <hr>
-<h2>Iso Shadow</h2>
-<p><img src="./gifs/isoshadow.gif" alt="Iso Shadow demo" width="256" height="256"></p>
-<p><em>Shears a sprite silhouette along the ground into a hard isometric cast shadow.</em></p>
+<h2 id="isoshadow">Iso Shadow</h2>
+<p><img src="./graphs/isoshadow.gif" alt="Iso Shadow node graph" width="808" height="322"></p>
+<p><strong>Shears a sprite silhouette along the ground into a hard isometric cast shadow.</strong></p>
 <p>Iso Shadow shears a sprite's silhouette along the ground into a hard isometric cast shadow, a straight affine shear of the alpha rather than a lighting calculation: no blur unless you count <strong>Dither</strong>, and no bounce light. <strong>Direction</strong> sets which way the shadow falls, and <strong>Snap to lattice axes</strong> locks it to the nearest lattice direction instead of a free angle, the way a whole hand-placed tileset gets its shadows drawn consistently.</p>
 <p><strong>Length %</strong> and <strong>Flatten %</strong> size the shadow: a vertical edge of height h ends up <strong>Length %</strong> times h long along the ground and <strong>Flatten %</strong> times that wide across it, so a low, spread out setting reads as noon and a long, narrow one as late afternoon. <strong>Ground line</strong> finds the sprite's lowest opaque row automatically, Bottom, or lets you set it by hand, Manual with <strong>Ground Y %</strong>, for a sprite whose feet are not at the very bottom of its own canvas.</p>
 <p><strong>Output</strong> at Shadow gives only the cast shape, meant to sit under the sprite on its own layer; Composite draws the sprite back on top of its own shadow in one image, useful for a quick preview or a single-node prop.</p>
@@ -329,9 +329,9 @@
 <li><strong>Output</strong>: Shadow / Composite, default Shadow, keyable</li>
 </ul>
 <hr>
-<h2>Voxel Shape</h2>
-<p><img src="./gifs/voxshape.gif" alt="Voxel Shape demo" width="256" height="256"></p>
-<p><em>Builds a voxel box, sphere, cylinder, cone, torus or pyramid, solid or hollow.</em></p>
+<h2 id="voxshape">Voxel Shape</h2>
+<p><img src="./graphs/voxshape.gif" alt="Voxel Shape node graph" width="244" height="300"></p>
+<p><strong>Builds a voxel box, sphere, cylinder, cone, torus or pyramid, solid or hollow.</strong></p>
 <p>Voxel Shape builds one of six primitive solids, Box, Sphere, Cylinder, Cone, Torus or Pyramid, straight into a voxel model rather than an image. It has no image inputs at all, since a voxel is not pixels: only Voxel Render turns the result into something you can see.</p>
 <p><strong>Size X</strong>, <strong>Size Y</strong> and <strong>Size Z</strong> set the grid in whole voxels along each axis, up to 64 a side. <strong>Hollow</strong> switches from a solid block to a shell <strong>Wall</strong> voxels thick, the fastest way to get a barrel, a pipe or a ring rather than a solid cylinder without carving anything by hand.</p>
 <p>This is the starting point for the Voxel shelf: build a shape here, feed it into Voxel Combine to cut or add a second one, or straight into Voxel Transform to turn, mirror or resize it, then finish with Voxel Render for the actual sprite. <strong>Colour</strong> is flat, one tone for the whole shape, since shading itself is Voxel Render's job, Light, Bands, Occlusion, not this node's: a Voxel Shape on its own is geometry and colour only, nothing lit yet.</p>
@@ -347,9 +347,9 @@
 <li><strong>Colour</strong>: colour, default #ffffff, keyable</li>
 </ul>
 <hr>
-<h2>Voxel Heightmap</h2>
-<p><img src="./gifs/voxheight.gif" alt="Voxel Heightmap demo" width="256" height="256"></p>
-<p><em>Raises a voxel column per cell of a height map, coloured by a second input.</em></p>
+<h2 id="voxheight">Voxel Heightmap</h2>
+<p><img src="./graphs/voxheight.gif" alt="Voxel Heightmap node graph" width="432" height="344"></p>
+<p><strong>Raises a voxel column per cell of a height map, coloured by a second input.</strong></p>
 <p>Voxel Heightmap raises a voxel column per cell of a height map, coloured by a second input, the volumetric twin of Iso Terrain. <strong>Cells X</strong> and <strong>Cells Y</strong> set the footprint grid and <strong>Height</strong> sets the vertical range in voxels; <strong>Levels</strong> terraces the wired height map's luminance into that many steps, exactly like Iso Terrain's own Terraces.</p>
 <p>A cell whose height pixel is fully transparent is a hole, not a zero-height column, the difference that lets a silhouette, rather than only a grayscale gradient, describe where the terrain actually exists: an island shape with a transparent background comes out as an island, not a full square block with a flat rim.</p>
 <p><strong>Colour</strong> sets the fallback tone; wire a second image into the node's colour input for a tone per column instead, the same Gradient Map source you would use on Iso Terrain's colour input works here too. Because the result is a voxel and not pixels yet, it needs Voxel Render downstream, at whichever of the eight directions the finished sprite is meant to face, with the lamp and outline set there rather than on this node.</p>
@@ -363,9 +363,9 @@
 <li><strong>Colour</strong>: colour, default #ffffff, keyable</li>
 </ul>
 <hr>
-<h2>Voxel Extrude</h2>
-<p><img src="./gifs/voxextrude.gif" alt="Voxel Extrude demo" width="256" height="256"></p>
-<p><em>Raises a shape or a picture into a solid, as tall as a height map says, over a base and under a bevel.</em></p>
+<h2 id="voxextrude">Voxel Extrude</h2>
+<p><img src="./graphs/voxextrude.gif" alt="Voxel Extrude node graph" width="526" height="366"></p>
+<p><strong>Raises a shape or a picture into a solid, as tall as a height map says, over a base and under a bevel.</strong></p>
 <p>Voxel Extrude raises a shape, a height map or a plain picture into a solid, over a flat base and under an optional bevel, and it is the one Voxel node built around a vector silhouette rather than only a raster one. The wired shape input takes a vector path and rasterises it at the model's own grid resolution, which keeps a curve looking clean whether the model is 24 cells or 64: the outline is redrawn at the target size instead of scaled from a fixed bitmap.</p>
 <p>All three inputs, the height map, the colour image and the vector shape, are optional and any single one is enough: a shape alone gives a flat extrusion of that silhouette, a picture alone stands itself up using its own colours as the footprint, and all three together give a sculpted icon with its own outline, relief and paint. <strong>Rule</strong> picks Nonzero or Even-odd for how the vector's overlapping regions fill, mattering mostly on shapes with holes or self intersections.</p>
 <p><strong>Cells X</strong> and <strong>Cells Y</strong> set the footprint grid and <strong>Height</strong> the vertical range in voxels, same as on Voxel Heightmap. <strong>Base</strong> lifts the whole extrusion off the floor by that many voxels, <strong>Bevel</strong> rounds its top edge, and <strong>Levels</strong> terraces the wired height map the way Iso Terrain does. <strong>Invert height</strong> flips which end of the height map reads as tall, and <strong>Colour</strong> sets the fallback tone when nothing is wired to the colour input.</p>
@@ -383,9 +383,9 @@
 <li><strong>Colour</strong>: colour, default #ffffff, keyable</li>
 </ul>
 <hr>
-<h2>Voxel Stack</h2>
-<p><img src="./gifs/voxstack.gif" alt="Voxel Stack demo" width="256" height="256"></p>
-<p><em>Stacks the cells of an atlas into a voxel model, one layer per cell.</em></p>
+<h2 id="voxstack">Voxel Stack</h2>
+<p><img src="./graphs/voxstack.gif" alt="Voxel Stack node graph" width="842" height="322"></p>
+<p><strong>Stacks the cells of an atlas into a voxel model, one layer per cell.</strong></p>
 <p>Voxel Stack turns each cell of an atlas into one layer of a voxel model, from the bottom up, the sprite stacking technique used to fake 3D out of a stack of flat drawings. <strong>Atlas cols</strong> and <strong>Atlas rows</strong> cut the input into cells the way any atlas reader does, and each cell becomes a layer as wide and tall as the cell itself, so this node has no size sliders at all: the model's footprint comes straight from the cell size.</p>
 <p><strong>Layers (0=all)</strong> limits how many cells get used, in case the atlas has more cells than the model needs, a blank row at the end, say; leave it at 0 to stack every cell. <strong>First cell on top</strong> reverses the usual order, useful when the source atlas was drawn top down, as most sprite sheets are, rather than bottom up, as a stack naturally reads.</p>
 <p>This is the fastest way to get a voxel model out of hand drawn pixel art rather than out of primitives: paint each slice of a character or prop as a flat sprite, arrange the slices in an atlas, and Voxel Stack turns the sheet into a model that Voxel Render can then turn around and view from any of the eight directions.</p>
@@ -398,9 +398,9 @@
 <li><strong>First cell on top</strong>: on / off, default off, keyable</li>
 </ul>
 <hr>
-<h2>Voxel Combine</h2>
-<p><img src="./gifs/voxcombine.gif" alt="Voxel Combine demo" width="256" height="256"></p>
-<p><em>Unions, subtracts, intersects or repaints two voxel models at an integer offset.</em></p>
+<h2 id="voxcombine">Voxel Combine</h2>
+<p><img src="./graphs/voxcombine.gif" alt="Voxel Combine node graph" width="512" height="344"></p>
+<p><strong>Unions, subtracts, intersects or repaints two voxel models at an integer offset.</strong></p>
 <p>Voxel Combine unions, subtracts, intersects or repaints two voxel models at an integer offset, the boolean toolkit for building a compound shape out of primitives instead of sculpting it directly. <strong>Operation</strong> picks Union, add B into A, Subtract, carve B's shape out of A, Intersect, keep only where both overlap, or Paint, repaint A's cells with B's colour wherever they overlap, geometry from A only.</p>
 <p><strong>Offset X</strong>, <strong>Offset Y</strong> and <strong>Offset Z</strong> place B relative to A in whole voxels before the operation runs, since the combine works on whole cells and needs the two grids lined up on an integer grid to mean anything. The result takes A's size, worth remembering when B is the larger of the two: build the bigger shape as A and cut or add the smaller one as B, not the other way round.</p>
 <p>I use Subtract to carve a window or a doorway out of a Voxel Shape box, and Union to bolt a Voxel Extrude detail, a handle, an antenna, onto a primitive base, before the whole thing goes to Voxel Transform for a final rotation and then to Voxel Render.</p>
@@ -413,9 +413,9 @@
 <li><strong>Offset Z</strong>: -64 .. 64, default 0, keyable</li>
 </ul>
 <hr>
-<h2>Voxel Transform</h2>
-<p><img src="./gifs/voxtransform.gif" alt="Voxel Transform demo" width="256" height="256"></p>
-<p><em>Turns, mirrors, moves, scales and crops a voxel model in whole voxels.</em></p>
+<h2 id="voxtransform">Voxel Transform</h2>
+<p><img src="./graphs/voxtransform.gif" alt="Voxel Transform node graph" width="466" height="322"></p>
+<p><strong>Turns, mirrors, moves, scales and crops a voxel model in whole voxels.</strong></p>
 <p>Voxel Transform turns, mirrors, moves, scales and crops a voxel model in whole voxels, the geometry toolkit for the whole shelf. <strong>Turn X</strong>, <strong>Turn Y</strong> and <strong>Turn Z</strong> snap to 90 degree steps by default; tick <strong>Free rotation</strong> for any angle, though that only really pays off with <strong>3D</strong> also ticked.</p>
 <p><strong>3D</strong> switches the whole node from rebuilding the grid to carrying a transform on the model instead, drawn through by Voxel Render rather than resampled: with it on, a free rotation turns the model as a mesh with nothing lost to resampling, at any angle and any number of steps, since the model keeps the grid it arrived with and only gains a transform. With 3D off, every rotation or scale rebuilds the actual voxel grid, exact at 90 degree steps but lossy at a free angle repeated many times.</p>
 <p><strong>Scale</strong> offers Half, Same, Double or Custom, <strong>Scale X %</strong>, <strong>Scale Y %</strong>, <strong>Scale Z %</strong>, as a grid rebuild in voxel mode, or as a plain multiplier with no cost at all in 3D mode. <strong>Crop to content</strong> trims empty space around the model after a move or a mirror, off by default and unavailable once 3D mode is on, since a mesh transform has no grid left to crop.</p>
@@ -443,9 +443,9 @@
 <li><strong>Crop to content</strong>: on / off, default off, except when mesh3d = on, keyable</li>
 </ul>
 <hr>
-<h2>Import VOX</h2>
-<p><img src="./gifs/voximport.gif" alt="Import VOX demo" width="256" height="256"></p>
-<p><em>Reads a .vox model file: its first model, its grid and its palette.</em></p>
+<h2 id="voximport">Import VOX</h2>
+<p><img src="./graphs/voximport.gif" alt="Import VOX node graph" width="244" height="266"></p>
+<p><strong>Reads a .vox model file: its first model, its grid and its palette.</strong></p>
 <p>Import VOX reads a MagicaVoxel .vox file: its first model if the file holds several, its own grid size, and the palette baked into the file. It has no image inputs, since it is where a voxel model enters the graph from disk rather than being built from nodes.</p>
 <p><strong>Flip Z</strong> flips the model along the vertical axis on the way in, worth trying first if an imported model comes in upside down: MagicaVoxel and Spaghetti do not agree on which way is up by default. The file itself is picked from the panel rather than typed as a parameter, the same way Import Image or Import SVG work in other categories.</p>
 <p>Whatever Voxel Shape or Voxel Extrude can build from primitives and vectors, Import VOX brings in from a proper voxel editor instead, at whatever detail the artist put into it. From here it is a voxel like any other: wire it into Voxel Combine to merge it with a generated piece, into Voxel Transform to fit it to the scene's scale, or straight into Voxel Render to turn it into a sprite.</p>
@@ -455,9 +455,9 @@
 <li><strong>Flip Z</strong>: on / off, default off, keyable</li>
 </ul>
 <hr>
-<h2>Voxel Render</h2>
-<p><img src="./gifs/voxrender.gif" alt="Voxel Render demo" width="256" height="256"></p>
-<p><em>Draws a voxel model from eight directions, four isometric and four flat.</em></p>
+<h2 id="voxrender">Voxel Render</h2>
+<p><img src="./graphs/voxrender.gif" alt="Voxel Render node graph" width="512" height="322"></p>
+<p><strong>Draws a voxel model from eight directions, four isometric and four flat.</strong></p>
 <p>Voxel Render is the only node that turns a voxel model into pixels, from any of eight directions, four isometric views and four flat, band-on ones, with no free camera at all, on purpose: eight fixed angles is what an isometric or top down game actually needs.</p>
 <p><strong>Direction (45s)</strong> steps through the eight, 0 to 7, so keying it across eight frames in the timeline is the whole recipe for a turntable sheet, no extra nodes required. <strong>Voxel size</strong> is how many screen pixels one voxel draws as, the resolution knob for the whole render.</p>
 <p><strong>Shading</strong> and <strong>Light</strong> apply the same shared table every other node in this category uses, so a rendered voxel model sits next to an Iso Solid without reading as lit differently. <strong>Bands (0=off)</strong> posterises curved surfaces, a sphere, a cylinder, the same way Iso Solid's own Bands does, off by default here since voxel faces are already flat. <strong>Occlusion</strong> darkens corners where voxels crowd together, off at 0 and worth turning up only for a denser model where the extra read is worth the cost. <strong>Output</strong> switches to Normal, Height, Mask or ID exactly like the raster Isometric nodes.</p>

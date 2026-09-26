@@ -18,9 +18,9 @@
 <p>Seventeen nodes split in two kinds. The first bunch builds structure: a skeleton (a tree's branches, an L-system's rewriting), or a shape (a leaf, a flower, a crown, a blade of grass, a hill, a rock, a cloud, a mushroom). None of that is pixels yet. Wire any of it into Fill, Stroke, Shade or the 1-Bit family and it becomes art at whatever size the canvas is, because a skeleton and a shape are both resolution independent the same way a Vector Primitive is.</p>
 <p>The second bunch is four finished sprites (Tree, Bush, Plant, Fungus Sprite) that do the wiring for you: they grow a structure, cluster a crown, band it from a light angle and outline it, all in one node. Reach for those when you want a tile now. Reach for Branching, Canopy, Grass and the rest when you want to build your own silhouette out of parts, or feed a crown into a Gradient Map instead of a flat light.</p>
 <hr>
-<h2>Branching</h2>
-<p><img src="./gifs/natbranch.gif" alt="Branching demo" width="256" height="256"></p>
-<p><em>Grows a tree skeleton, branching by levels or colonizing the space inside an envelope.</em></p>
+<h2 id="natbranch">Branching</h2>
+<p><img src="./graphs/natbranch.gif" alt="Branching node graph" width="432" height="322"></p>
+<p><strong>Grows a tree skeleton, branching by levels or colonizing the space inside an envelope.</strong></p>
 <p>Two unrelated algorithms behind one skeleton output. Recursive is the classic rule: pick <strong>Levels</strong>, <strong>Children</strong>, an <strong>Angle</strong> and a <strong>Length ratio %</strong>, and the tree forks the same way at every scale. Two knobs decide the character on top of that: <strong>Tropism</strong> pulls (positive) or pushes (negative) every new segment back toward the growth axis, so a poplar is a high positive tropism and a weeping willow a negative one. <strong>Dominance %</strong> hands extra length to whichever branch at a fork points straightest, which is what keeps a trunk reading as a trunk instead of forking into two equal arms.</p>
 <p>Colonize is the other algorithm, space colonization against an <strong>Envelope</strong> (Ellipse, Dome, Cone, Fan, or a wired <strong>Mask</strong> whose luminance is read as density). <strong>Attractors</strong>, <strong>Influence %</strong> and <strong>Kill %</strong> are the paper's own numbers: more attractors and a tighter kill radius give a denser, twiggier crown.</p>
 <p><strong>Grow %</strong> is the animation axis in this whole category, a tree rising out of the ground. Feed the skeleton into a Stroke (Round cap and join) to see it, since a raw skeleton has no width of its own outside the pipe model.</p>
@@ -52,9 +52,9 @@
 <li><strong>Pipe exponent %</strong>: 100 .. 400, default 200, only when mode = Colonize, keyable</li>
 </ul>
 <hr>
-<h2>L-System</h2>
-<p><img src="./gifs/natlsystem.gif" alt="L-System demo" width="256" height="256"></p>
-<p><em>Rewrites turtle symbols into a plant skeleton, from a preset or from rules you type.</em></p>
+<h2 id="natlsystem">L-System</h2>
+<p><img src="./graphs/natlsystem.gif" alt="L-System node graph" width="244" height="300"></p>
+<p><strong>Rewrites turtle symbols into a plant skeleton, from a preset or from rules you type.</strong></p>
 <p>The one generator you can type into. Eleven presets (ferns, weeds, seaweed, coral, a bush, six from the Algorithmic Beauty of Plants book) cover most of what an L-system is good for; <strong>Preset: Custom</strong> opens <strong>Iterations</strong> and <strong>Angle</strong> as sliders, and <strong>Edit rules...</strong> opens a window with the axiom and the rewriting rules as text, for whoever wants to write their own turtle grammar.</p>
 <p><strong>Length decay %</strong> and <strong>Width decay %</strong> taper each generation, which is what stops a seven-iteration fern from being a solid mat of same-thickness lines. Push <strong>Iterations</strong> past 5 or 6 and the <strong>Budget</strong> (a node budget, not a visual one) starts capping how much of the rewriting actually gets drawn, so a preset that looks sparse at 4 may not gain much going to 7.</p>
 <p>Same <strong>Grow %</strong> axis as Branching, and the same reason to view it through a Stroke rather than a Fill: the output is a skeleton, and a skeleton alone has no area.</p>
@@ -74,9 +74,9 @@
 <li><strong>Budget</strong>: 8 .. 1200, default 800, keyable</li>
 </ul>
 <hr>
-<h2>Wind</h2>
-<p><img src="./gifs/natwind.gif" alt="Wind demo" width="256" height="256"></p>
-<p><em>Bends any shape sideways, quadratically with the height above the pivot it is nailed at.</em></p>
+<h2 id="natwind">Wind</h2>
+<p><img src="./graphs/natwind.gif" alt="Wind node graph" width="526" height="322"></p>
+<p><strong>Bends any shape sideways, quadratically with the height above the pivot it is nailed at.</strong></p>
 <p>Bends whatever shape is wired in, sideways, by an amount that grows with the square of the height above the <strong>Pivot</strong>: <code>x += amplitude * h^2 * sin(phase + x * frequency)</code>. That squaring is why it reads as a stem bending rather than a picture sliding sideways, the wind at the pivot is zero and grows toward the free end.</p>
 <p>Wire in a tuft of Grass, a Vector Text, a Trace of a photograph, anything on a <code>shape</code> wire. <strong>Phase</strong> is the axis to animate, a full turn is one sway there and back; sweeping <strong>Amplitude</strong> instead just bends further and further with no return. At the default 25% amplitude the bend is subtle, worth pushing toward 50-60% to see it clearly on a small sprite.</p>
 <p>One gotcha worth knowing: the bend is not a matrix, so it cannot ride lazily the way a Transform does. Whatever comes in gets resampled at <strong>Detail px</strong> first, and a tree or a dense crown wired in benefits from raising that past the default 256 if the bend looks faceted.</p>
@@ -90,9 +90,9 @@
 <li><strong>Detail px (resample)</strong>: 32 .. 512, default 256, keyable</li>
 </ul>
 <hr>
-<h2>Leaf</h2>
-<p><img src="./gifs/natleaf.gif" alt="Leaf demo" width="256" height="256"></p>
-<p><em>Shapes a leaf from the Gielis superformula or two mirrored curves, with teeth, lobes and veins.</em></p>
+<h2 id="natleaf">Leaf</h2>
+<p><img src="./graphs/natleaf.gif" alt="Leaf node graph" width="244" height="300"></p>
+<p><strong>Shapes a leaf from the Gielis superformula or two mirrored curves, with teeth, lobes and veins.</strong></p>
 <p>Two unrelated ways to build the blade, picked with <strong>Kind</strong>. Superformula runs the Gielis formula off one parameter, <strong>Symmetry m</strong>: 0-1 gives a rounded petal, 2 a classic leaf, 3 and up turns lobed and star-shaped. <strong>Sharpness n1</strong>, <strong>Cosine n2</strong> and <strong>Sine n3</strong> reshape the same curve without changing its symmetry count. Blade is the other construction, a drawn silhouette with <strong>Widest at %</strong> placing the belly and <strong>Base</strong> choosing a Cuneate (tapered) or Cordate (heart-shaped) base.</p>
 <p>Margin and veins apply to both kinds: <strong>Serration %</strong> and <strong>Teeth</strong> cut a jagged edge, <strong>Lobes</strong> and <strong>Lobe depth %</strong> cut deeper notches, and <strong>Veins</strong> (Pinnate, Palmate, Parallel) draws the vein pattern independent of the blade. <strong>Part</strong> (Blade / Veins / Both) is the one to reach for if you want to fill the blade one color and the veins another, which needs two Leaf nodes or two Fill passes off the same veins output.</p>
 <p><strong>Grow %</strong> shrinks the leaf from its tip, the way Foliate expects a leaf to open.</p>
@@ -123,9 +123,9 @@
 <li><strong>Grow %</strong>: 0 .. 100, default 100, keyable</li>
 </ul>
 <hr>
-<h2>Flower</h2>
-<p><img src="./gifs/natflower.gif" alt="Flower demo" width="256" height="256"></p>
-<p><em>Arranges petals in twisted rings around a seeded centre, opening from bud to full bloom.</em></p>
+<h2 id="natflower">Flower</h2>
+<p><img src="./graphs/natflower.gif" alt="Flower node graph" width="526" height="322"></p>
+<p><strong>Arranges petals in twisted rings around a seeded centre, opening from bud to full bloom.</strong></p>
 <p>Petals ring a center in <strong>Layers</strong>, each layer twisted by <strong>Layer twist</strong> and scaled down by <strong>Layer scale %</strong>, which is what gives a flower depth instead of one flat ring. The default <strong>Petal</strong> is the superformula petal at m=1; wire a shape into the <strong>Petal</strong> input (a Leaf node, an imported SVG) to use your own instead.</p>
 <p><strong>Center</strong> picks None, a plain Disc, or Seeds, which packs dots along a Vogel spiral, the same golden-angle arrangement a real sunflower head uses, so raising <strong>Seeds</strong> never leaves two dots touching or a visible gap. <strong>Bloom %</strong> is the node's real axis: at 0 the petals are twisted shut into a bud, at 100 they are open flat. It is worth animating over Grow on other nodes in this category, since a flower opening reads differently from a plant growing.</p>
 <p>Note that <strong>Center size %</strong> only applies once a center is chosen, and <strong>Seeds</strong> only appears when <strong>Center</strong> is set to Seeds.</p>
@@ -149,9 +149,9 @@
 <li><strong>Seed</strong>: 1 .. 9999999999, default 1, keyable</li>
 </ul>
 <hr>
-<h2>Canopy</h2>
-<p><img src="./gifs/natcanopy.gif" alt="Canopy demo" width="256" height="256"></p>
-<p><em>Packs a crown out of clustered puffs, inside an envelope or on the tips of a skeleton.</em></p>
+<h2 id="natcanopy">Canopy</h2>
+<p><img src="./graphs/natcanopy.gif" alt="Canopy node graph" width="244" height="344"></p>
+<p><strong>Packs a crown out of clustered puffs, inside an envelope or on the tips of a skeleton.</strong></p>
 <p>The rule this node exists to keep is clusters, not noise: everything it draws is copies of one puff silhouette, gathered into <strong>Clumps</strong>, each clump made of <strong>Puffs</strong> puffs. That is what makes a crown read as foliage instead of as a filtered noise field once you Shade it into bands.</p>
 <p><strong>Envelope</strong> (Ellipse, Dome, Cloud, Cone or a wired <strong>Mask</strong>) decides the outer silhouette when there is no <strong>Skeleton</strong> wired in. Wire a Branching or an L-System skeleton in instead and the clumps gather at its tips (<strong>Tip depth</strong>, how many levels back from the very end counts as a tip) rather than inside an abstract envelope, which is the wiring &quot;a crown that follows this specific tree&quot; needs.</p>
 <p><strong>Flatten %</strong> compresses the whole crown vertically, <strong>Underside %</strong> trims flat from below (useful once a light angle from Shade starts casting the canopy against a trunk), and <strong>Grow %</strong> is again the axis that reads best, puffs popping in one by one rather than the crown fading in at once.</p>
@@ -174,9 +174,9 @@
 <li><strong>Budget</strong>: 8 .. 400, default 160, keyable</li>
 </ul>
 <hr>
-<h2>Foliate</h2>
-<p><img src="./gifs/natfoliate.gif" alt="Foliate demo" width="256" height="256"></p>
-<p><em>Hangs leaves along a skeleton and on its tips, alternate, opposite or whorled.</em></p>
+<h2 id="natfoliate">Foliate</h2>
+<p><img src="./graphs/natfoliate.gif" alt="Foliate node graph" width="244" height="344"></p>
+<p><strong>Hangs leaves along a skeleton and on its tips, alternate, opposite or whorled.</strong></p>
 <p>Leaves hung along a <strong>Skeleton</strong>, or on its tips, or both, set by <strong>Where</strong>. <strong>Phyllotaxis</strong> decides how many leaves sit at each station along the branch: Alternate is one leaf per station switching sides, Opposite is a pair facing each other, Whorled is three around the stem. Real plants use exactly this vocabulary, and switching it is the fastest way to make the same skeleton read as two different species.</p>
 <p><strong>Spacing %</strong> only matters when leaves run <strong>Along</strong> a branch rather than sitting only at the <strong>Tips</strong>. <strong>Size by depth %</strong> shrinks leaves further out on the skeleton relative to ones near the trunk, which reads as perspective on a tree crown even at a flat pixel scale. <strong>Mirror alternate</strong> flips every other leaf so an alternate arrangement does not repeat the exact same silhouette down the stem.</p>
 <p>No <strong>Grow</strong> row here on purpose, since what animates is the skeleton underneath; <strong>Leaf size %</strong> is what to sweep if you want to show the node's own effect rather than the branch growing.</p>
@@ -195,9 +195,9 @@
 <li><strong>Budget</strong>: 4 .. 300, default 90, keyable</li>
 </ul>
 <hr>
-<h2>Vine</h2>
-<p><img src="./gifs/natvine.gif" alt="Vine demo" width="256" height="256"></p>
-<p><em>Trails alternate leaves and curling tendrils along a path, growing from one end.</em></p>
+<h2 id="natvine">Vine</h2>
+<p><img src="./graphs/natvine.gif" alt="Vine node graph" width="244" height="322"></p>
+<p><strong>Trails alternate leaves and curling tendrils along a path, growing from one end.</strong></p>
 <p>A vine trails from one end of a wired <strong>Curve</strong> (a Path Source, a Trace, a Vector Shape, or nothing at all, in which case it walks a slack S of its own), leafing alternately and throwing a curling tendril every <strong>Tendril every</strong> leaves. Set that to 0 to turn tendrils off entirely, since it reads as a numeric switch rather than a mode.</p>
 <p><strong>Taper %</strong> thins the vine and its leaves toward the free end, which is what stops a vine wrapped around a trellis from reading as a uniform rope. <strong>Grow %</strong> runs the vine forward along its path, the axis to animate for a plant climbing into frame.</p>
 <p>Do not expect much from wiring a closed shape (a Star, a filled Rect) in as the Curve: the node reads it as an outline to walk, and a garland stamped around the rim of a closed blob is not the effect it is built for. It wants an open path.</p>
@@ -213,9 +213,9 @@
 <li><strong>Budget</strong>: 4 .. 200, default 60, keyable</li>
 </ul>
 <hr>
-<h2>Grass</h2>
-<p><img src="./gifs/natgrass.gif" alt="Grass demo" width="256" height="256"></p>
-<p><em>Sows blades along a baseline or a wired curve, gathered into tufts, leaning and curling.</em></p>
+<h2 id="natgrass">Grass</h2>
+<p><img src="./graphs/natgrass.gif" alt="Grass node graph" width="244" height="322"></p>
+<p><strong>Sows blades along a baseline or a wired curve, gathered into tufts, leaning and curling.</strong></p>
 <p>Blades stand on a straight <strong>Baseline %</strong> by default, or along a wired <strong>Curve</strong> (a Trace, a Vector Shape, or a Horizon, which is the one cable that turns &quot;grass&quot; into &quot;grass on a hill&quot;). <strong>Clumping %</strong> gathers blades into tufts instead of spacing them evenly, <strong>Lean</strong> tilts the whole stand one way and <strong>Lean jitter %</strong> scatters individual blades around that lean, and <strong>Curl %</strong> bends the blade tip.</p>
 <p>Two rows exist purely to keep grass readable at small sizes: <strong>Min gap px</strong> keeps blades from merging into a solid green wall when <strong>Blades</strong> is high, and <strong>Min width px</strong> floors the blade thickness so it survives an aliased fill instead of rounding away (pair it with <strong>One-pixel tip</strong> for blades that taper to exactly one pixel rather than fading to nothing). At 32-64 px, thin blades and low thickness values are the ones that vanish first, worth checking the fill at actual size before tuning further.</p>
 <p><strong>Grow %</strong> raises the blades from the ground, the category's usual axis.</p>
@@ -240,9 +240,9 @@
 <li><strong>Budget</strong>: 4 .. 300, default 160, keyable</li>
 </ul>
 <hr>
-<h2>Horizon</h2>
-<p><img src="./gifs/nathorizon.gif" alt="Horizon demo" width="256" height="256"></p>
-<p><em>Carves a skyline of hills, ridges, dunes or terraces, tileable and layered for parallax.</em></p>
+<h2 id="nathorizon">Horizon</h2>
+<p><img src="./graphs/nathorizon.gif" alt="Horizon node graph" width="244" height="300"></p>
+<p><strong>Carves a skyline of hills, ridges, dunes or terraces, tileable and layered for parallax.</strong></p>
 <p>A skyline as a pure function, one height per column, never two, which is what makes an aliased Fill of it a proper silhouette instead of an overhang. <strong>Mode</strong> picks the character: Hills is rounded fBm noise, Mountains folds it at the midpoint so every ridge gets a sharp corner (a peak, not a bump), Dunes warps the domain by its own value so crests lean and the faces they push into steepen, and Cliffs quantizes into <strong>Steps</strong> flat terraces.</p>
 <p><strong>Parallax layer</strong> is not cosmetic: stack several Horizon nodes on the same <strong>Seed</strong> with <strong>Parallax layer</strong> 0, 1, 2 and they read as one landscape at different distances, each layer's amplitude and detail scaled down automatically rather than as unrelated noise. <strong>Tile in X</strong> keeps the profile's two edges matching for a scrolling background.</p>
 <p>Grass wired to this node's output stands the blades on the terrain instead of on a flat line, which is the recipe this category is built around.</p>
@@ -261,9 +261,9 @@
 <li><strong>Tile in X</strong>: on / off, default on, keyable</li>
 </ul>
 <hr>
-<h2>Rock</h2>
-<p><img src="./gifs/natrock.gif" alt="Rock demo" width="256" height="256"></p>
-<p><em>Swells a polygon into a boulder with two octaves of noise, then breaks it into facets.</em></p>
+<h2 id="natrock">Rock</h2>
+<p><img src="./graphs/natrock.gif" alt="Rock node graph" width="244" height="300"></p>
+<p><strong>Swells a polygon into a boulder with two octaves of noise, then breaks it into facets.</strong></p>
 <p>A regular polygon (<strong>Sides</strong>) melts into a boulder as <strong>Roughness %</strong> rises, two octaves of noise doing the melting; <strong>Detail %</strong> is the amplitude of the finer of the two, so it adds crumble rather than the big lumps roughness gives. <strong>Flatten %</strong> squashes the whole rock and <strong>Jagged %</strong> sharpens its silhouette between rounded and chipped.</p>
 <p><strong>Part</strong> matters more than it looks: Silhouette is a normal filled shape, but Facets and Cracks both come out as lines (a Voronoi cell split and a network of cracks), so they want a Stroke rather than a Fill, a zero-area contour filled is nothing. <strong>Facets</strong> sets how many cells the Voronoi split makes, <strong>Crack amount %</strong> how much of that network shows when <strong>Part</strong> is Cracks.</p>
 <p>No <strong>Grow</strong> row on this one, it is a static form meant to be shaded afterward (wire it into Shade for the light, not into this node).</p>
@@ -285,9 +285,9 @@
 <li><strong>Seed</strong>: 1 .. 9999999999, default 1, keyable</li>
 </ul>
 <hr>
-<h2>Cloud</h2>
-<p><img src="./gifs/natcloud.gif" alt="Cloud demo" width="256" height="256"></p>
-<p><em>Strings puffs along a spine under a bell profile and slices the base flat.</em></p>
+<h2 id="natcloud">Cloud</h2>
+<p><img src="./graphs/natcloud.gif" alt="Cloud node graph" width="244" height="300"></p>
+<p><strong>Strings puffs along a spine under a bell profile and slices the base flat.</strong></p>
 <p>Puffs threaded along an invisible spine under a bell-shaped profile, <strong>Puffs</strong> many, each sized by <strong>Puff size %</strong> and scattered by <strong>Jitter %</strong>. <strong>Flat base %</strong> slices the bottom flat, which is most of what separates a cumulus silhouette from a plain blob, push it toward 60-80% for the classic flat-bottomed look.</p>
 <p>There is no light or ramp on this node by design, same as Rock: a cloud here is a form, and shading is somebody else's job (Gradient Map reads well against it). <strong>Grow %</strong> is the axis worth animating, since it reveals the puffs joining one at a time rather than the whole cloud fading in, which is closer to how a cumulus actually builds.</p>
 <p><strong>In:</strong> nothing &middot; <strong>Out:</strong> shape</p>
@@ -305,9 +305,9 @@
 <li><strong>Grow %</strong>: 0 .. 100, default 100, keyable</li>
 </ul>
 <hr>
-<h2>Fungus</h2>
-<p><img src="./gifs/natfungus.gif" alt="Fungus demo" width="256" height="256"></p>
-<p><em>Assembles a mushroom out of cap, stem, gills and spots, each part on its own or all at once.</em></p>
+<h2 id="natfungus">Fungus</h2>
+<p><img src="./graphs/natfungus.gif" alt="Fungus node graph" width="254" height="300"></p>
+<p><strong>Assembles a mushroom out of cap, stem, gills and spots, each part on its own or all at once.</strong></p>
 <p>Cap, stem, gills and spots, each one a part you can draw on its own or all together via <strong>Part</strong>. <strong>Cap</strong> picks the silhouette (Semi-ellipse, Cone, Flat, or Superformula for something less regular), sized by <strong>Cap width %</strong> and <strong>Cap height %</strong>; none of the three cap rows apply once <strong>Part</strong> is set to Stem only, since there is no cap to describe.</p>
 <p><strong>Stem height %</strong> is read by every part regardless, since it decides where the cap sits even when the cap itself is not being drawn. <strong>Gills</strong> and <strong>Spots</strong> are counts, not toggles, and are the only hashed part of the mushroom (<strong>Seed</strong> only shows for Spots or All), so a seed row that seemed to do nothing on a plain cap and stem is not a bug, it has nothing random left to reach.</p>
 <p>Everything comes out as one <code>shape</code>, so filling the cap one color and the stem another means running two of these nodes with different <strong>Part</strong> settings, or reaching for Fungus Sprite instead if you want the coloring done for you.</p>
@@ -330,9 +330,9 @@
 <li><strong>Grow %</strong>: 0 .. 100, default 100, keyable</li>
 </ul>
 <hr>
-<h2>Tree</h2>
-<p><img src="./gifs/nattree.gif" alt="Tree demo" width="256" height="256"></p>
-<p><em>Draws a whole tree: branches, a clustered crown, banded light and a one pixel outline.</em></p>
+<h2 id="nattree">Tree</h2>
+<p><img src="./graphs/nattree.gif" alt="Tree node graph" width="244" height="322"></p>
+<p><strong>Draws a whole tree: branches, a clustered crown, banded light and a one pixel outline.</strong></p>
 <p>The full sprite in one node: <strong>Mode</strong> carries over Branching's two algorithms but trims the panel to the three or four rows that actually change the silhouette (<strong>Levels</strong>, <strong>Branch angle</strong>, <strong>Tropism</strong> for Recursive; <strong>Envelope</strong>, <strong>Attractors</strong> for Colonize), the rest pinned to sane defaults so this stays a one-click tile rather than Branching with extra steps.</p>
 <p><strong>Light from</strong> and <strong>Bands</strong> control the shading exactly like Shade elsewhere in the engine, <strong>Outline</strong> adds a Darker, a flat Colour, or no rim at all. <strong>Trunk colour</strong> and <strong>Leaf colour</strong> are the two flat colors before banding; wiring a <strong>Ramp</strong> in replaces the leaf banding with that ramp's colors instead, which is worth doing for an autumn palette, but wiring a plain noise into Ramp expecting a palette gives a hundred random colors rather than bands, since the whole point of this node is that it bands itself.</p>
 <p><strong>Grow %</strong> builds the tree, <strong>Wind %</strong> sways it (through the same quadratic bend Wind uses on its own), and <strong>Budget</strong> caps how many skeleton nodes Colonize mode is allowed to sow.</p>
@@ -364,9 +364,9 @@
 <li><strong>Budget</strong>: 8 .. 800, default 200, keyable</li>
 </ul>
 <hr>
-<h2>Bush</h2>
-<p><img src="./gifs/natbush.gif" alt="Bush demo" width="256" height="256"></p>
-<p><em>Draws a bush as a clustered dome on the ground, banded from the light, over short twigs.</em></p>
+<h2 id="natbush">Bush</h2>
+<p><img src="./graphs/natbush.gif" alt="Bush node graph" width="244" height="322"></p>
+<p><strong>Draws a bush as a clustered dome on the ground, banded from the light, over short twigs.</strong></p>
 <p>The same sprite machinery as Tree, aimed at a ground-hugging crown instead of a trunk and canopy: <strong>Twigs</strong> (1-4) sets how many short stems the puffs cluster around, and there is no branching algorithm to choose, just a height, a twig count and the same clump-and-puff crown Canopy builds elsewhere in the category.</p>
 <p><strong>Flatten %</strong> matters more here than on Tree, since a bush read from the side is mostly its silhouette against the ground; pushing it up keeps the crown from reading as a floating ball. Same <strong>Light from</strong>, <strong>Bands</strong>, <strong>Outline</strong>, <strong>Trunk</strong> (here the twig color) and <strong>Leaf</strong> rows as every sprite in this shelf, and the same <strong>Ramp</strong> input if you want colored foliage instead of a flat leaf tone.</p>
 <p><strong>Budget</strong> is lower than Tree's by default (120 against 200), since a bush needs far fewer clumps to read as full.</p>
@@ -392,9 +392,9 @@
 <li><strong>Budget</strong>: 8 .. 400, default 120, keyable</li>
 </ul>
 <hr>
-<h2>Plant</h2>
-<p><img src="./gifs/natplant.gif" alt="Plant demo" width="256" height="256"></p>
-<p><em>Draws a leafy plant from the side, flowering on its tips, banded from the light.</em></p>
+<h2 id="natplant">Plant</h2>
+<p><img src="./graphs/natplant.gif" alt="Plant node graph" width="244" height="322"></p>
+<p><strong>Draws a leafy plant from the side, flowering on its tips, banded from the light.</strong></p>
 <p>A stem, leaves and an optional flower on the tips, the smallest of the four finished sprites and the one closest to a single herb rather than a whole scene prop. <strong>Stem levels</strong> (1-3) branches the stem, <strong>Phyllotaxis</strong> and <strong>Spacing %</strong> place the leaves exactly as Foliate does, and <strong>Flower on tips</strong> turns the tip blossom on or off; <strong>Petals</strong> and <strong>Flower size %</strong> only show once it is on.</p>
 <p><strong>Leaves</strong> is a budget (how many leaf anchors the plant is allowed) more than a count you should expect to hit exactly, since <strong>Spacing %</strong> and <strong>Stem levels</strong> both compete for it. Same shading rows as the other three sprites, and the same <strong>Ramp</strong> input for a palette instead of a flat leaf color.</p>
 <p><strong>Grow %</strong> raises the whole plant from the ground and opens the flower at the same time, there is no separate bloom control on this node the way there is on the standalone Flower.</p>
@@ -423,9 +423,9 @@
 <li><strong>Wind %</strong>: 0 .. 100, default 0, keyable</li>
 </ul>
 <hr>
-<h2>Fungus Sprite</h2>
-<p><img src="./gifs/natfungussprite.gif" alt="Fungus Sprite demo" width="256" height="256"></p>
-<p><em>Draws a mushroom with cap, stem, gills and spots coloured and banded from the light.</em></p>
+<h2 id="natfungussprite">Fungus Sprite</h2>
+<p><img src="./graphs/natfungussprite.gif" alt="Fungus Sprite node graph" width="244" height="322"></p>
+<p><strong>Draws a mushroom with cap, stem, gills and spots coloured and banded from the light.</strong></p>
 <p>A colored mushroom out of the same cap, stem, gills and spots as Fungus, minus the <strong>Part</strong> switch, since a sprite draws all of them at once. <strong>Cap</strong>, <strong>Cap width %</strong>, <strong>Cap height %</strong>, <strong>Stem height %</strong> and <strong>Stem width %</strong> shape it exactly as they do on the plain Fungus node.</p>
 <p>The one thing worth knowing before reaching for <strong>Trunk colour</strong> and <strong>Leaf colour</strong>: gills and spots are painted with the stem color, not the cap color, which is what turns a light cap and a dark stem into a mushroom with dark speckles on its cap using only two color rows instead of four. If you want spotted gills a different shade from the stem itself, this node cannot do it; run Fungus with <strong>Part: All</strong> and separate Fill passes instead.</p>
 <p>Same <strong>Light from</strong>, <strong>Bands</strong>, <strong>Outline</strong>, <strong>Grow</strong> and <strong>Wind</strong> rows as the other three sprites, and the same <strong>Ramp</strong> input in place of the two flat colors.</p>

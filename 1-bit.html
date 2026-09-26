@@ -18,9 +18,9 @@
 <p>&quot;1-bit modern&quot; is not Bayer and nothing else, it is a threshold decision with four genuinely different ways of being taken, and the difference between them is most of the look. This category is built around that split: dither in grey first (Bitmap), color at the end (Ink &amp; Paper), because a binariser that already knew its ink colors could not be recolored without redithering, and picking the accent is a separate decision from picking the threshold.</p>
 <p>The rest of the family covers everything else black-and-white printing needed before digital dithering existed, screens as actual images you can warp and animate, halftone dots that average a cell before sizing the dot, hatching, stippling and engraving as three different hand techniques, a line pass to put structure back on top of a dither, cleanup morphology, and a two-plate riso simulation for the print side of the same idea.</p>
 <hr>
-<h2>Bitmap</h2>
-<p><img src="./gifs/bitmap.gif" alt="Bitmap demo" width="256" height="256"></p>
-<p><em>Decides which pixel is ink by threshold, ordered screen, error diffusion or local threshold.</em></p>
+<h2 id="bitmap">Bitmap</h2>
+<p><img src="./graphs/bitmap.gif" alt="Bitmap node graph" width="442" height="366"></p>
+<p><strong>Decides which pixel is ink by threshold, ordered screen, error diffusion or local threshold.</strong></p>
 <p>Where a pixel decides whether it is ink, in four different ways set by <strong>Method</strong>. <strong>Threshold</strong> is the plain cutoff against <strong>Level</strong>. <strong>Ordered</strong> compares against a <strong>Screen</strong> matrix (Bayer at three sizes, Blue Noise, Clustered, Lines, or <strong>From input</strong> to wire in any image as the screen). <strong>Diffusion</strong> spreads the rounding error to neighbors with a <strong>Kernel</strong>, Floyd-Steinberg is the default and the classic worm-like look, Atkinson only spreads six eighths of the error rather than all of it, which is what burns highlights and shadows to flat paper and flat ink and keeps midtones clean, the actual Mac Plus look. Riemersma walks a Hilbert curve instead of rows, which removes the diagonal streaking a raster scan leaves on a flat field.</p>
 <p><strong>Adaptive</strong> is the local-threshold method (Sauvola), useful on uneven lighting or a scanned source where one global level cannot work everywhere, <strong>Window</strong> sets the neighborhood size and <strong>Bias</strong> how far the local threshold departs from the local mean.</p>
 <p><strong>Contrast</strong> matters before the method runs, not after, a threshold cannot recover detail the grey never had. <strong>Alpha</strong> (Keep / Dither alpha / Force opaque) decides what happens to soft edges, Dither alpha is worth it on a sprite with antialiased edges coming in, since a straight Keep leaves half-transparent ink that is not really 1-bit anymore.</p>
@@ -41,9 +41,9 @@
 <li><strong>Alpha</strong>: Keep / Dither alpha / Force opaque, default Keep, keyable</li>
 </ul>
 <hr>
-<h2>Ink &amp; Paper</h2>
-<p><img src="./gifs/inkpaper.gif" alt="Ink &amp; Paper demo" width="256" height="256"></p>
-<p><em>Paints ink and paper in two chosen colors, and adds a third where the Accent input says.</em></p>
+<h2 id="inkpaper">Ink &amp; Paper</h2>
+<p><img src="./graphs/inkpaper.gif" alt="Ink &amp; Paper node graph" width="432" height="344"></p>
+<p><strong>Paints ink and paper in two chosen colors, and adds a third where the Accent input says.</strong></p>
 <p>Paints two flat colors, <strong>Ink</strong> and <strong>Paper</strong>, over whatever a Bitmap (or anything else) handed you, plus a third, <strong>Accent</strong>, that replaces the ink specifically where a wired <strong>Accent</strong> mask is on, an accent plate prints where the art is rather than over the paper. <strong>Ink below</strong> is the same threshold Bitmap itself reads, since this node is meant to run right after one, in grey.</p>
 <p>Keep the dithering and the coloring apart in your own head the way the category does: run Bitmap first to decide which pixel is ink, then this node to say what color that ink is. Reaching for Ink &amp; Paper before binarizing just recolors a grey gradient, which loses the whole point of picking a dither method in the first place. <strong>Paper alpha</strong> under 100 is worth it for a sticker or an overlay where the background should stay see-through while the ink stays solid.</p>
 <p><strong>In:</strong> In (image), Accent (image) &middot; <strong>Out:</strong> image</p>
@@ -56,9 +56,9 @@
 <li><strong>Ink below</strong>: 0 .. 255, default 128, keyable</li>
 </ul>
 <hr>
-<h2>Screen</h2>
-<p><img src="./gifs/screen.gif" alt="Screen demo" width="256" height="256"></p>
-<p><em>Outputs the threshold field as an image: Bayer, blue noise, clustered dot, lines or classic screens.</em></p>
+<h2 id="screen">Screen</h2>
+<p><img src="./graphs/screen.gif" alt="Screen node graph" width="302" height="300"></p>
+<p><strong>Outputs the threshold field as an image: Bayer, blue noise, clustered dot, lines or classic screens.</strong></p>
 <p>Turns the threshold field itself into an image instead of a hidden option of Bitmap, <strong>Screen</strong> picking Bayer at four sizes, Blue Noise, Clustered Dot, Lines, Cross, Diamond, Spiral, or <strong>Pattern Ramp</strong> (one of seventeen classic hand-picked pixel screens, <strong>Ramp</strong> choosing which level of it prints). <strong>Cell</strong>, <strong>Angle</strong> and <strong>Phase X/Y</strong> place and scale the pattern like any other tiling texture.</p>
 <p>Because it rides the same <code>image</code> wire as anything else, it can be warped, scaled, blended, or wired straight back into Bitmap's own <strong>Screen: From input</strong> row, which is worth doing whenever a rotated or custom-scaled screen is needed rather than one of Bitmap's built-in sizes. <strong>Phase</strong> (Off / Slide / Rotate / Reseed) with <strong>Phase %</strong> is what makes an animated screen actually move without breaking its own tiling, Slide walks it a whole period, Rotate turns it, Reseed re-places it from an unrelated draw, worth it for a shimmering hologram or a scanline effect over several frames.</p>
 <p><strong>Tile safe</strong> snaps the angle and cell to the canvas so the pattern actually seams correctly, worth leaving on for anything meant to tile.</p>
@@ -78,9 +78,9 @@
 <li><strong>Phase %</strong>: 0 .. 100, default 0, except when phaseMode = Off, keyable</li>
 </ul>
 <hr>
-<h2>Halftone</h2>
-<p><img src="./gifs/halftone.gif" alt="Halftone demo" width="256" height="256"></p>
-<p><em>Turns tone into print dots, averaging each cell before choosing the dot size.</em></p>
+<h2 id="halftone">Halftone</h2>
+<p><img src="./graphs/halftone.gif" alt="Halftone node graph" width="432" height="344"></p>
+<p><strong>Turns tone into print dots, averaging each cell before choosing the dot size.</strong></p>
 <p>A classic print halftone, round or otherwise, and the reason it exists as its own node rather than Screen plus Bitmap: a real halftone averages the tone over a whole cell before deciding how big the dot is, while a per-pixel screen just breaks up wherever an edge happens to cross a cell. <strong>Dot</strong> (Round, Euclidean, Square, Diamond, Ellipse, Line, Cross, or <strong>From input</strong> for a custom spot shape) is the silhouette one cell grows into, <strong>Frequency</strong> how many cells fit across the canvas, and <strong>Angle</strong> the classic halftone rotation, 45 degrees by default because that is the angle a single-plate halftone reads as least distracting.</p>
 <p><strong>Dot gain</strong> fattens midtone dots without touching the two ends, which is literally what happens on a real press when ink spreads on paper, worth a small positive value for a print-poster look. <strong>Sharpness</strong> below 100 softens the dot edge into a ramp instead of a hard decision, closer to a scanned screentone than a clean digital one.</p>
 <p>Same <strong>Phase</strong>/<strong>Phase %</strong> and <strong>Tile safe</strong> rows as Screen, for an animated halftone that still tiles cleanly.</p>
@@ -98,9 +98,9 @@
 <li><strong>Phase %</strong>: 0 .. 100, default 0, except when phaseMode = Off, keyable</li>
 </ul>
 <hr>
-<h2>Hatch</h2>
-<p><img src="./gifs/hatch.gif" alt="Hatch demo" width="256" height="256"></p>
-<p><em>Shades with parallel strokes, adding one layer per tone step without moving the earlier ones.</em></p>
+<h2 id="hatch">Hatch</h2>
+<p><img src="./graphs/hatch.gif" alt="Hatch node graph" width="432" height="344"></p>
+<p><strong>Shades with parallel strokes, adding one layer per tone step without moving the earlier ones.</strong></p>
 <p>Parallel strokes shading by tone, adding a new <strong>Layer</strong> at each tone step rather than moving the ones already drawn, up to four layers. That containment is the whole point: the strokes of a light tone are a subset of the strokes of a darker one, so nothing gets replaced as the tone shifts, which is what stops an animated hatch from boiling frame to frame. <strong>Angle step</strong> rotates each additional layer relative to the first, the classic cross-hatch look at 45 or 90 degrees.</p>
 <p><strong>Spacing</strong> and <strong>Thickness</strong> set the line weight and gap, <strong>Jitter</strong> wobbles each line's position for a hand-drawn rather than a ruled look, and <strong>Taper</strong> narrows each stroke to a point at both ends instead of a flat-cut end, worth combining with a little Jitter for something that reads as a pen sketch rather than mechanical hatching.</p>
 <p>Wire a <strong>Mask</strong> in to stencil the hatch the way Bitmap's mask works, no ink outside it at all.</p>
@@ -120,9 +120,9 @@
 <li><strong>Phase %</strong>: 0 .. 100, default 0, except when phaseMode = Off, keyable</li>
 </ul>
 <hr>
-<h2>Stipple</h2>
-<p><img src="./gifs/stipple.gif" alt="Stipple demo" width="256" height="256"></p>
-<p><em>Stipples by density, laying dots in blue noise order, so raising the tone only adds.</em></p>
+<h2 id="stipple">Stipple</h2>
+<p><img src="./graphs/stipple.gif" alt="Stipple node graph" width="432" height="344"></p>
+<p><strong>Stipples by density, laying dots in blue noise order, so raising the tone only adds.</strong></p>
 <p>Dots scattered by density rather than pixels decided one at a time, laid down in the order a blue-noise field ranks them, so raising the tone only ever adds dots and never re-sorts the ones already placed, which is what keeps a stipple stable across an animation instead of flickering. <strong>Min distance</strong> sets the lattice pitch the dots sit on, <strong>Dot</strong> (Round, Square, Diamond, Plus) and <strong>Dot size</strong> the stamp itself, and <strong>Gamma</strong> biases how quickly density builds with tone.</p>
 <p>This node avoids clumping by construction, since blue noise is specifically the field that spreads points apart, which is the property that separates a proper stipple from dots dropped at random. Same <strong>Phase</strong>/<strong>Phase %</strong> rows as Screen and Halftone (Rotate here turns the deposition order itself rather than resampling the lattice, since the lattice is axis-aligned by construction), and the same <strong>Tile safe</strong> for a pattern that actually repeats.</p>
 <p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
@@ -138,9 +138,9 @@
 <li><strong>Phase %</strong>: 0 .. 100, default 0, except when phaseMode = Off, keyable</li>
 </ul>
 <hr>
-<h2>Contour</h2>
-<p><img src="./gifs/contour.gif" alt="Contour demo" width="256" height="256"></p>
-<p><em>Draws the contour lines of the input field and thickens the stroke where the image darkens.</em></p>
+<h2 id="contour">Contour</h2>
+<p><img src="./graphs/contour.gif" alt="Contour node graph" width="432" height="322"></p>
+<p><strong>Draws the contour lines of the input field and thickens the stroke where the image darkens.</strong></p>
 <p>Draws the level curves of whatever field comes in, the line placed where the tone sits within half a stroke width of one of <strong>Levels</strong> evenly spaced bands, measured in actual pixels rather than in tone units, so the line stays the same weight on a gentle slope and on a sharp one. A perfectly flat area has no gradient and therefore draws no line at all, which is the honest answer rather than a special case to work around.</p>
 <p><strong>Weight by tone</strong> is the engraving half of the node: at 0 every line is the same width regardless of how dark that band is, past 0 lines widen toward the dark end, the way a burin cuts wider where a printing plate needs to read darker, a banknote's engraving is built from exactly this. <strong>Offset</strong> shifts where the bands fall without changing how many there are, useful for lining a contour up against a specific edge in the source.</p>
 <p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
@@ -154,9 +154,9 @@
 <li><strong>Invert</strong>: on / off, default off, keyable</li>
 </ul>
 <hr>
-<h2>Line Art</h2>
-<p><img src="./gifs/lineart.gif" alt="Line Art demo" width="256" height="256"></p>
-<p><em>Draws the line with XDoG: two subtracted gaussians, sharpened, in gray, binary or pencil.</em></p>
+<h2 id="lineart">Line Art</h2>
+<p><img src="./graphs/lineart.gif" alt="Line Art node graph" width="442" height="322"></p>
+<p><strong>Draws the line with XDoG: two subtracted gaussians, sharpened, in gray, binary or pencil.</strong></p>
 <p>XDoG (Winnemoller 2011), a difference of two gaussians rather than a Sobel edge detector, which matters because a gradient detector draws the whole slope of a smooth ramp, while a center-surround operator like this one asks whether a pixel is darker than its own surroundings at a chosen scale and answers exactly zero on a linear ramp, drawing only where there is an actual step. That is why this reads as drawing a line rather than detecting an edge.</p>
 <p><strong>Sigma</strong> sets the base blur scale, <strong>Ratio</strong> how much wider the second gaussian is (11-40, in tenths), and <strong>Boost</strong> how strongly the difference between them gets amplified into a stroke. <strong>Threshold</strong> and <strong>Falloff</strong> shape the soft cutoff that turns that amplified signal into ink, <strong>Falloff</strong> higher makes the cutoff harder. <strong>Output</strong> picks Edges (grey coverage, good for feeding another node), Threshold (the plain binary line), or Sketch (the same coverage broken up on a 45 degree screen, which reads as pencil hatching rather than scattered specks at a light setting).</p>
 <p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
@@ -172,9 +172,9 @@
 <li><strong>Invert</strong>: on / off, default off, keyable</li>
 </ul>
 <hr>
-<h2>Bit Clean</h2>
-<p><img src="./gifs/bitclean.gif" alt="Bit Clean demo" width="256" height="256"></p>
-<p><em>Cleans ink with morphology: kills specks, plugs holes, opens, closes, grows or bridges gaps.</em></p>
+<h2 id="bitclean">Bit Clean</h2>
+<p><img src="./graphs/bitclean.gif" alt="Bit Clean node graph" width="630" height="344"></p>
+<p><strong>Cleans ink with morphology: kills specks, plugs holes, opens, closes, grows or bridges gaps.</strong></p>
 <p>Six morphology operations named the way a printer would rather than a mathematician: <strong>Despeckle</strong> removes ink islands up to a <strong>Radius</strong> squared in size, <strong>Fill holes</strong> does the same for paper pockets fully enclosed by ink, <strong>Open</strong> and <strong>Close</strong> are the standard erode-then-dilate and dilate-then-erode pair for shrinking noise or sealing small gaps, <strong>Bleed</strong> is a plain dilation (dot gain, ink spreading into the fibre), and <strong>Trap</strong> is the specialized one: it only joins a paper pixel to ink when there is ink within reach on two opposite sides, which fills the gap of a misregistration without also fattening every stroke's outside edge the way Bleed or Close would.</p>
 <p><strong>Passes</strong> repeats Open, Close, Bleed or Trap that many times, and <strong>Sharp corners</strong> switches between 4-connectivity (round corners surviving cleanup) and 8-connectivity (sharp ones). Wire a <strong>Protect</strong> mask in to pin specific pixels back to their original value after every single pass, not just once at the end, so a protected line cannot get eaten by two passes stacking up on it.</p>
 <p><strong>In:</strong> In (image), Protect (image) &middot; <strong>Out:</strong> image</p>
@@ -188,9 +188,9 @@
 <li><strong>Invert</strong>: on / off, default off, keyable</li>
 </ul>
 <hr>
-<h2>Edge Lock</h2>
-<p><img src="./gifs/edgelock.gif" alt="Edge Lock demo" width="256" height="256"></p>
-<p><em>Composites the dithered fill with the line on top so the silhouette always wins.</em></p>
+<h2 id="edgelock">Edge Lock</h2>
+<p><img src="./graphs/edgelock.gif" alt="Edge Lock node graph" width="842" height="462"></p>
+<p><strong>Composites the dithered fill with the line on top so the silhouette always wins.</strong></p>
 <p>Composites a dithered <strong>Fill</strong> with a <strong>Line</strong> on top, the cheap explicit version of what a proper structure-aware halftone would solve as one expensive optimization: what the eye actually misses when a halftone eats a drawing is the line, so this node just puts the line back, last, after everything else. With nothing wired into <strong>Line</strong> it hands the fill straight back unchanged, there is no structure to lock.</p>
 <p><strong>Silhouette</strong> (Outline / Clear / Off) inks or clears a rim around the shape (read from a wired <strong>Mask</strong>, or the fill's own alpha when there is none) so the outside edge reads as an edge instead of more dither texture, <strong>Rim</strong> sets how thick. <strong>Relief</strong> clears the fill's own ink for a pixel or two around the line first, so a dark dither does not drown a thin line sitting on top of it, this is the step that keeps line art legible over a heavy hatch or a dense stipple rather than getting lost in it.</p>
 <p><strong>In:</strong> Fill (image), Line (image), Mask (image) &middot; <strong>Out:</strong> image</p>
@@ -203,9 +203,9 @@
 <li><strong>Invert</strong>: on / off, default off, keyable</li>
 </ul>
 <hr>
-<h2>Riso</h2>
-<p><img src="./gifs/riso.gif" alt="Riso demo" width="256" height="256"></p>
-<p><em>Prints two ink plates on paper, with misregistration, grain, uneven coverage and overprint.</em></p>
+<h2 id="riso">Riso</h2>
+<p><img src="./graphs/riso.gif" alt="Riso node graph" width="432" height="462"></p>
+<p><strong>Prints two ink plates on paper, with misregistration, grain, uneven coverage and overprint.</strong></p>
 <p>Two ink plates and a paper, simulating an actual riso duplicator rather than blending two flat colors: each plate is a binary pass, either the drum pushed ink through at that point or it did not, which is why this belongs in a 1-bit family at all, a riso really is one bit per ink. <strong>Misregister</strong> offsets the two plates in opposite directions along <strong>Miss angle</strong>, the plates never lining up perfectly the way a real press does not either. <strong>Bleed</strong> dilates each plate before printing, ink spreading into the fibre.</p>
 <p><strong>Grain</strong> speckles ink out and darkens what survives, one shared field since there is one sheet of paper under both inks. <strong>Coverage</strong> below 100 drops ink in slow blotches, a separate roll per plate since the two drums miss in different places. <strong>Overprint</strong> (Multiply, Darken, Average, Ink A, Ink B) decides what happens where both plates land on the same pixel, Multiply is the physically honest one, two translucent inks each taking light out of what the paper reflects, the other four are for when that is not the look you want. <strong>Paper alpha</strong> below 100 turns the whole thing into a sticker, transparent where there is no ink and no sheet either.</p>
 <p><strong>In:</strong> Ink A (image), Ink B (image), Paper (image) &middot; <strong>Out:</strong> image</p>

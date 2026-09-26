@@ -18,9 +18,9 @@
 <p>Lighting turns a flat height field or a plain silhouette into something that reads as lit. Six of these eight nodes work the classic way: a height map becomes a normal map, the normal map catches a lamp, and the same map casts a shadow or gets occluded in its own cracks. The last two, Shade and Pixel Bevel, skip the normal map step entirely and read a mask directly, painting a rim of light and dark straight onto the silhouette, closer to how a pixel artist shades a sprite by hand.</p>
 <p>Feed the height-based nodes a grayscale bump, feed Shade and Pixel Bevel any image with a readable silhouette, alpha or otherwise, and the family sorts out the rest. Most graphs end up using both lineages on the same sprite: a baked normal map for the broad shading, a mask-based bevel for the crisp pixel-level rim on top.</p>
 <hr>
-<h2>Normal</h2>
-<p><img src="./gifs/normal.gif" alt="Normal demo" width="256" height="256"></p>
-<p><em>Turns a grayscale height map (white = high) into the normal map Light shades.</em></p>
+<h2 id="normal">Normal</h2>
+<p><img src="./graphs/normal.gif" alt="Normal node graph" width="432" height="322"></p>
+<p><strong>Turns a grayscale height map (white = high) into the normal map Light shades.</strong></p>
 <p>Normal turns a grayscale height map, white read as high ground, into the tangent space normal map every other lighting node in this family expects on its Normal input. <strong>Sampling</strong> picks Sobel, the default, a 3x3 kernel that reads as smoother, or Cross, four neighbours only, cheaper and a touch sharper on fine detail.</p>
 <p><strong>Strength</strong> is the one slider that matters most: low values, under 20, give a nearly flat map, good for gentle rounding on a smooth stone or metal surface; past 60 the slope reads as aggressive, closer to a cut gem than a rock. <strong>Flip Y (DirectX)</strong> flips the green channel for engines that read normals the OpenGL way versus the DirectX way, so if an exported map looks lit from the wrong side in an engine, this is the first thing to try.</p>
 <p><strong>Seamless tiling</strong> wraps the sampling at the edges, on by default, and it should stay on for anything meant to repeat: turning it off reads the height map's own edges as a cliff, correct for a one-off prop but wrong for a floor tile.</p>
@@ -33,9 +33,9 @@
 <li><strong>Seamless tiling</strong>: on / off, default on, keyable</li>
 </ul>
 <hr>
-<h2>Normal Blend</h2>
-<p><img src="./gifs/normalblend.gif" alt="Normal Blend demo" width="256" height="256"></p>
-<p><em>Fades a Detail normal map over a Base one, or normalizes / rotates one alone.</em></p>
+<h2 id="normalblend">Normal Blend</h2>
+<p><img src="./graphs/normalblend.gif" alt="Normal Blend node graph" width="620" height="344"></p>
+<p><strong>Fades a Detail normal map over a Base one, or normalizes / rotates one alone.</strong></p>
 <p>Normal Blend combines two normal maps, or does something to one alone, depending on <strong>Mode</strong>. Whiteout is the cheap standard combine, add the XY components and renormalise, good enough for one broad base map and a fine detail layer like grain or scratches sitting on top of it. Detail reorients the detail map onto the base's own slope, more correct on a steep base but heavier to compute, worth reaching for only when Whiteout visibly slides on a steep surface.</p>
 <p><strong>Detail</strong> is the blend strength between the two maps, at 100 by default; drop it to fade a scratch or crack layer in without losing the base underneath. Normalize and Rotate ignore this slider entirely and work on the base alone, the first cleaning up a map that drifted off unit length after several filters, the second turning <strong>Angle</strong> into a spin of the XY components, which is how a normal mapped texture gets rotated to match a rotated albedo without re-baking the height.</p>
 <p>Linear adds the two maps' XY directly and keeps the base's Z, the roughest of the four and the fastest, worth it when the detail layer is genuinely tiny noise and the difference from Whiteout will not show at pixel art sizes anyway.</p>
@@ -47,9 +47,9 @@
 <li><strong>Angle</strong>: 0 .. 359, default 0, only when kind = Rotate, keyable</li>
 </ul>
 <hr>
-<h2>Light</h2>
-<p><img src="./gifs/light.gif" alt="Light demo" width="256" height="256"></p>
-<p><em>Shades a normal map with a lamp; the Color input is the image it lights (albedo).</em></p>
+<h2 id="light">Light</h2>
+<p><img src="./graphs/light.gif" alt="Light node graph" width="620" height="344"></p>
+<p><strong>Shades a normal map with a lamp; the Color input is the image it lights (albedo).</strong></p>
 <p>Light shades a normal map with one lamp; the Color input is the albedo it lights, and without one the result is a plain grayscale study of the shading itself. <strong>Type</strong> picks Directional, one angle and elevation lighting the whole texture the same way, a sun, or Point, a lamp placed at <strong>Lamp X %</strong> and <strong>Lamp Y %</strong> that falls off over <strong>Falloff %</strong>, a torch or a bulb.</p>
 <p><strong>Bands (0=smooth)</strong> is the slider that decides whether this reads as pixel art or as an airbrush render: at 0 the shading is a smooth gradient; set it to 3 to 6 and the diffuse term posterises into flat steps, what a hand shaded sprite actually looks like. I rarely ship a Light node with Bands left at 0.</p>
 <p><strong>Ambient</strong> keeps the unlit side readable instead of going pure black, and <strong>Ambient colour</strong> lets that fill lean cool or warm independently of the lamp's own <strong>Light colour</strong>. <strong>Specular</strong> with <strong>Shininess</strong> adds a small highlight on rounded surfaces, mostly worth turning on for anything wet, metallic or glassy; on matte stone or cloth it usually stays at 0.</p>
@@ -71,9 +71,9 @@
 <li><strong>Ambient colour</strong>: colour, default #ffffff, keyable</li>
 </ul>
 <hr>
-<h2>Shadow</h2>
-<p><img src="./gifs/shadow.gif" alt="Shadow demo" width="256" height="256"></p>
-<p><em>From a height map, casts the drop shadow the lamp angle throws on lower ground.</em></p>
+<h2 id="shadow">Shadow</h2>
+<p><img src="./graphs/shadow.gif" alt="Shadow node graph" width="432" height="322"></p>
+<p><strong>From a height map, casts the drop shadow the lamp angle throws on lower ground.</strong></p>
 <p>Shadow reads a height map and casts the drop shadow the lamp throws on lower ground nearby, different from Light's shading since this is occlusion between features rather than the slope of one surface. <strong>Angle</strong> and <strong>Elevation</strong> share the same convention as Light's directional lamp, so the two usually get matching values to keep the cast shadow consistent with the surface shading.</p>
 <p><strong>Height (px)</strong> and <strong>Ray length (px)</strong> set how tall the features are and how far the shadow ray searches for something to fall on; a low sun, <strong>Elevation</strong> near 0, with a long <strong>Ray length (px)</strong> throws long shadows across a whole tile, a high sun with a short one keeps them tucked under each bump.</p>
 <p><strong>Softness</strong> blurs the shadow's edge into a penumbra instead of a hard line, proportional to <strong>Height (px)</strong>, so a tall occluder gets a softer falling-off shadow than a short one at the same setting. The output is a lit/dark mask, not a colour, meant to multiply over the albedo with a Blend node: white where lit, dark inside the shadow, with <strong>Opacity</strong> scaling how deep that dark goes.</p>
@@ -89,9 +89,9 @@
 <li><strong>Seamless tiling</strong>: on / off, default on, keyable</li>
 </ul>
 <hr>
-<h2>Occlusion</h2>
-<p><img src="./gifs/ao.gif" alt="Occlusion demo" width="256" height="256"></p>
-<p><em>From a height map, darkens the crevices (ambient occlusion) that see less sky.</em></p>
+<h2 id="ao">Occlusion</h2>
+<p><img src="./graphs/ao.gif" alt="Occlusion node graph" width="432" height="322"></p>
+<p><strong>From a height map, darkens the crevices (ambient occlusion) that see less sky.</strong></p>
 <p>Occlusion darkens the crevices of a height map, the ambient occlusion that gathers in cracks and corners because they see less of the open sky than a flat plain or a peak does. It fires rays outward in <strong>Samples</strong> directions and darkens each pixel by however steep a rise it finds nearby, within <strong>Radius (px)</strong>.</p>
 <p><strong>Radius (px)</strong> is the reach of the effect: small, 1 to 3, picks out only tight seams and mortar lines, larger, 8 and up, also shades broad shallow valleys, which starts to look like a second, softer light rather than crevice occlusion. <strong>Samples</strong> trades quality for speed, more directions catch corners a 4 or 6 sample sweep would miss, at the cost of evaluating slower on a big canvas.</p>
 <p><strong>Height (px)</strong> has to match whatever value built the height map's Normal or Shadow, since it decides how tall a bump reads before the ray math ever runs. <strong>Intensity</strong> scales the whole darkening. Multiply the result over the lit colour the way Shadow's output is meant to be used: I usually stack Occlusion first, then Shadow, then any specular highlight from Light, since crevices should darken before a highlight lands on top of them.</p>
@@ -105,9 +105,9 @@
 <li><strong>Seamless tiling</strong>: on / off, default on, keyable</li>
 </ul>
 <hr>
-<h2>Shade</h2>
-<p><img src="./gifs/shade.gif" alt="Shade demo" width="256" height="256"></p>
-<p><em>Brightens the edge facing the light and darkens the opposite one.</em></p>
+<h2 id="shade">Shade</h2>
+<p><img src="./graphs/shade.gif" alt="Shade node graph" width="866" height="344"></p>
+<p><strong>Brightens the edge facing the light and darkens the opposite one.</strong></p>
 <p>Shade brightens the edge of a shape facing the light and darkens the opposite one, working straight off a silhouette rather than off a normal map. It is the fast, mask based half of this family: no height map, no bake step, only an image and a <strong>Light from</strong> angle.</p>
 <p><strong>Thickness</strong> sets how many pixels deep the lit and dark bands reach in from the edge, 1 to 4; at 1 this reads as a thin pixel-art rim light, higher values thicken it into more of a graded bevel. <strong>Inner band</strong> pushes both bands further in from the very edge, the move for a shape with a thin outline of its own that should stay untouched while the shade sits just inside it.</p>
 <p><strong>Shape from</strong> decides what counts as the silhouette: Auto reads alpha when the image has any transparency and luminance otherwise, or force Alpha or Luminance directly when Auto guesses wrong. <strong>Wrap around</strong> lets the light and dark reach wrap across the canvas edge, worth turning on for a tile. Wire a ramp into the second input and Shade reads its lightest and darkest colours instead of the plain <strong>Light</strong> and <strong>Dark</strong> swatches, the quick way to shade into a specific palette.</p>
@@ -124,9 +124,9 @@
 <li><strong>Wrap around</strong>: on / off, default off, keyable</li>
 </ul>
 <hr>
-<h2>Normal to Height</h2>
-<p><img src="./gifs/normaltoheight.gif" alt="Normal to Height demo" width="256" height="256"></p>
-<p><em>Rebuilds the height that normal map would produce, by integrating it.</em></p>
+<h2 id="normaltoheight">Normal to Height</h2>
+<p><img src="./graphs/normaltoheight.gif" alt="Normal to Height node graph" width="620" height="322"></p>
+<p><strong>Rebuilds the height that normal map would produce, by integrating it.</strong></p>
 <p>Normal to Height runs the opposite of the Normal node: it rebuilds the height field that would have produced a given normal map, by integrating the map's slopes back into a surface. There is one control that really matters, <strong>Iterations</strong>, because the integration is iterative, a Poisson solve, rather than a closed form.</p>
 <p>Low iteration counts, under 50, converge to something rough, workable for a quick preview but visibly unsettled, especially in the middle of a large flat area. Past 100 the result stabilises; the default of 48 is a working compromise, and I bump it to 100 or more only when the reconstructed height still shows a visible gradient where it should be flat.</p>
 <p><strong>Flip Y (DirectX)</strong> has to match whatever convention the normal map was baked with, the same switch as on the Normal node itself: get it wrong and the recovered height reads inverted, hills where there should be valleys. This node exists for the case where a normal map is all you have, an imported texture, a hand painted one, and something downstream, Shadow or Occlusion, needs an actual height field to work from.</p>
@@ -137,9 +137,9 @@
 <li><strong>Flip Y (DirectX)</strong>: on / off, default off, keyable</li>
 </ul>
 <hr>
-<h2>Pixel Bevel</h2>
-<p><img src="./gifs/pixbevel.gif" alt="Pixel Bevel demo" width="256" height="256"></p>
-<p><em>Lights one edge of a mask and shadows the opposite one, a pixel at a time.</em></p>
+<h2 id="pixbevel">Pixel Bevel</h2>
+<p><img src="./graphs/pixbevel.gif" alt="Pixel Bevel node graph" width="432" height="344"></p>
+<p><strong>Lights one edge of a mask and shadows the opposite one, a pixel at a time.</strong></p>
 <p>Pixel Bevel lights one edge of a mask and shadows the opposite one, a pixel at a time rather than as a smooth gradient, which is what makes it read as a pixel art bevel instead of a rendered one. <strong>Light from</strong> sets the direction, the same convention as Shade and Light.</p>
 <p><strong>Lit (px)</strong> sets how many rings deep the lit side reaches, and <strong>Shadow (px, 0 = lit)</strong> does the same for the dark side, defaulting to match Lit when left at 0. <strong>Inner (px)</strong> pushes both bands in from the very edge, exactly like Shade's Inner band, for leaving a hand-drawn outline untouched. Each ring is one pixel deep and rendered as its own flat tone rather than blended, and <strong>Output</strong> can hand back one ring alone, Lit ring or Dark ring, instead of the full union, which is how a thin shape like tall grass gets its blade tips picked out separately from its base.</p>
 <p>Composite paints the rings straight onto the wired image, or onto the mask itself if nothing is wired to the second input, using <strong>Light</strong>, <strong>Light, deep ring</strong>, <strong>Dark</strong> and <strong>Dark, deep ring</strong> as the two-tone ramps on each side. <strong>Mask from</strong> and <strong>Wrap around</strong> work the same as on Shade.</p>

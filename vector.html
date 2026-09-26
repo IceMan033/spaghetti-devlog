@@ -18,16 +18,16 @@
 <p>Everything the engine could draw before this category either fitted a regular polygon or did not fit anything. A vector shape is different: it is resolution independent by construction, editable after the fact, and the only source in the catalogue whose outline is something you can measure (a distance, a length, a tangent) instead of a picture you have to guess at from pixels. Sixteen nodes cover the whole loop, drawing a shape, filling and stroking it, transforming and combining it algebraically, measuring distance off it, and tracing pixels back into contours again.</p>
 <p>Most of these nodes never rasterize anything on their own, a Transform composes a matrix, a Combine writes down an operator, and the tree stays exact until something downstream (a Fill, a Stroke, an Export) actually needs pixels or an SVG. That is why stacking several of them costs nothing extra: nothing gets flattened until the very end.</p>
 <hr>
-<h2>Vector Shape</h2>
-<p><img src="./gifs/vecdraw.gif" alt="Vector Shape demo" width="256" height="256"></p>
-<p><em>Stores a hand-drawn shape and opens it in its window with pen, pencil, shapes and knife.</em></p>
+<h2 id="vecdraw">Vector Shape</h2>
+<p><img src="./graphs/vecdraw.gif" alt="Vector Shape node graph" width="244" height="266"></p>
+<p><strong>Stores a hand-drawn shape and opens it in its window with pen, pencil, shapes and knife.</strong></p>
 <p>The one node in the category with nothing to configure beyond a <strong>Draw...</strong> button, which opens the shape in its own window with pen, pencil, primitive and knife tools. What you draw is the entire node, and a fresh one starts as a simple pointed leaf (two corner anchors joined by two curves), deliberately something no primitive in this family could produce on its own, so it reads as hand-drawn from the first frame.</p>
 <p>Use it for a silhouette you cannot get out of Vector Primitive or the Nature category: a custom leaf for Foliate, a badge shape, a hand-fit outline traced over a reference. Everything downstream (Fill, Stroke, Offset, Repeat, Export SVG) treats it exactly like any other shape, so a Vector Shape slots into a Foliate's Leaf input or a Flower's Petal input with no extra wiring.</p>
 <p><strong>In:</strong> nothing &middot; <strong>Out:</strong> shape</p>
 <hr>
-<h2>Vector Primitive</h2>
-<p><img src="./gifs/vecprim.gif" alt="Vector Primitive demo" width="256" height="256"></p>
-<p><em>Puts a vector shape on the wire: rectangle, ellipse, polygon, star, arc, line or spiral.</em></p>
+<h2 id="vecprim">Vector Primitive</h2>
+<p><img src="./graphs/vecprim.gif" alt="Vector Primitive node graph" width="278" height="300"></p>
+<p><strong>Puts a vector shape on the wire: rectangle, ellipse, polygon, star, arc, line or spiral.</strong></p>
 <p>Eight parametric shapes (Rect, Rounded Rect, Ellipse, Polygon, Star, Arc/Pie, Line, Spiral) behind one <strong>Shape</strong> combo, which is the node to reach for whenever the silhouette itself is regular. <strong>Sides</strong> only matters for Polygon and Star, <strong>Inner %</strong> for Star and Spiral (how far the inner points or the spiral's start pulls toward the center), and <strong>Start angle</strong> plus <strong>Sweep</strong> for Arc/Pie and Spiral, a Sweep past 360 on a Spiral is what actually makes it wind more than once.</p>
 <p><strong>Size X %</strong> and <strong>Size Y %</strong> are independent, so a Rect stretched wide and an Ellipse squashed flat both come out of the same two sliders; Line only has <strong>Size X %</strong> since a line has no height of its own to give.</p>
 <p>This is usually the first node in a chain: fill it directly, stroke it, or feed it into Combine, Repeat or Offset before it ever becomes pixels. No inputs, so it is always a starting point.</p>
@@ -47,9 +47,9 @@
 <li><strong>Sweep</strong>: 1 .. 1440, default 270, only when kind = Arc/Pie / Spiral, keyable</li>
 </ul>
 <hr>
-<h2>Vector Text</h2>
-<p><img src="./gifs/vectext.gif" alt="Vector Text demo" width="256" height="256"></p>
-<p><em>Turns text in the 5x7 font into contours, keeping the pixel or fitting it to curves.</em></p>
+<h2 id="vectext">Vector Text</h2>
+<p><img src="./graphs/vectext.gif" alt="Vector Text node graph" width="244" height="300"></p>
+<p><strong>Turns text in the 5x7 font into contours, keeping the pixel or fitting it to curves.</strong></p>
 <p>Text rendered in the engine's 5x7 font, but as contours instead of a picture. <strong>Blocky</strong> is on by default, which keeps the pixel: the contour runs along real pixel boundaries, so filling it Aliased gives back exactly what the plain Text node would draw. Turn Blocky off and <strong>Simplify px</strong> and <strong>Fit: Curves</strong> (with <strong>Fit error px</strong>) appear, which smooth the letterforms into a proper font-like curve instead of a staircase, at the cost of no longer matching the pixel Text node exactly.</p>
 <p><strong>Scale</strong> is the one row worth watching on a small card: at 64 px, four letters of &quot;TEXT&quot; hold up to about scale 4 before the word runs off the edge, so most of a slider's reach past that point is a picture of one letter. <strong>Anchor</strong> (Fit, Left, Center, Right) decides how the string sits against <strong>Pos X</strong>/<strong>Pos Y</strong> once it no longer fits centered.</p>
 <p>Because the output is contours and not a picture, the same word can be stroked, trimmed by arc length, dashed or exported to SVG, none of which a rendered bitmap of letters can do.</p>
@@ -67,9 +67,9 @@
 <li><strong>Fit error px</strong>: 0 .. 16, default 1, only when fit = Curves; except when blocky = on, keyable</li>
 </ul>
 <hr>
-<h2>Fill</h2>
-<p><img src="./gifs/vecfill.gif" alt="Fill demo" width="256" height="256"></p>
-<p><em>Fills the shape by measuring each pixel area, with a hard, smoothed or dithered edge.</em></p>
+<h2 id="vecfill">Fill</h2>
+<p><img src="./graphs/vecfill.gif" alt="Fill node graph" width="526" height="344"></p>
+<p><strong>Fills the shape by measuring each pixel area, with a hard, smoothed or dithered edge.</strong></p>
 <p>Turns a shape into pixels by measuring how much of each pixel's area the shape actually covers, then deciding ink from that coverage in one of three ways: <strong>Aliased</strong> (a hard yes or no), <strong>Antialiased</strong> (soft edges) or <strong>Dither</strong> (an ordered screen, picked with <strong>Screen</strong> once Edge is set to Dither). <strong>Rule</strong> (Nonzero / Even-odd) only shows a difference once two contours overlap or a shape has a self-intersection, over a plain convex outline the two rules agree.</p>
 <p><strong>Output</strong> is the row that changes what this node hands you: Fill is the plain colored result, Coverage is the raw grey before any edge decision was made, and Distance, Gradient and Normal all read the signed distance field instead, giving a bevel ramp, an inward glow ramp, or a surface normal usable for fake lighting, all without a blur node anywhere in the chain. <strong>Colour</strong> and <strong>Opacity</strong> only apply in Fill mode, since the other four outputs are measured values rather than a color choice.</p>
 <p>Wire a <strong>Mask</strong> in and it stencils the result, this is not a blend, a masked-out pixel gets no ink at all rather than a faded one.</p>
@@ -84,9 +84,9 @@
 <li><strong>Output</strong>: Fill / Coverage / Distance / Gradient / Normal, default Fill, keyable</li>
 </ul>
 <hr>
-<h2>Stroke</h2>
-<p><img src="./gifs/vecstroke.gif" alt="Stroke demo" width="256" height="256"></p>
-<p><em>Strokes the shape by expanding it to a fill: width, caps, joins, dashes and pixel perfect.</em></p>
+<h2 id="vecstroke">Stroke</h2>
+<p><img src="./graphs/vecstroke.gif" alt="Stroke node graph" width="536" height="344"></p>
+<p><strong>Strokes the shape by expanding it to a fill: width, caps, joins, dashes and pixel perfect.</strong></p>
 <p>Expands a shape's outline into a band and paints it, with the same vocabulary a vector editor uses: <strong>Align</strong> (Center, Inside, Outside), <strong>Cap</strong> (Butt, Square, Round), <strong>Join</strong> (Miter, Round, Bevel, with <strong>Miter limit</strong> only mattering for Miter joins), plus <strong>Dashed</strong> with <strong>Dash px</strong>, <strong>Gap px</strong> and <strong>Dash offset px</strong> once it is switched on. <strong>Taper %</strong> thins the stroke toward its ends, which reads as a hand-drawn mark rather than a ruled line at higher values.</p>
 <p><strong>Pixel perfect</strong> matters specifically at <strong>Thickness px</strong> 1 with an Aliased edge, it is what keeps a one-pixel stroke from dropping to half a pixel at a shallow diagonal, the case a paint program's own pencil tool has to solve the same way. Leave it on unless you have a specific reason to turn it off.</p>
 <p>Same <strong>Edge</strong> and <strong>Screen</strong> rows as Fill, for a dithered rather than a hard-edged stroke, and the same optional <strong>Mask</strong> input to stencil it.</p>
@@ -109,9 +109,9 @@
 <li><strong>Screen</strong>: Bayer 2x2 / Bayer 4x4 / Bayer 8x8 / Bayer 16x16 / Blue Noise / Cross / Diamond / Spiral, default Bayer 4x4, only when hardness = Dither, keyable</li>
 </ul>
 <hr>
-<h2>Outline</h2>
-<p><img src="./gifs/vecoutline.gif" alt="Outline demo" width="256" height="256"></p>
-<p><em>Turns the stroke into a shape, to fill it, combine it or subtract it as one more contour.</em></p>
+<h2 id="vecoutline">Outline</h2>
+<p><img src="./graphs/vecoutline.gif" alt="Outline node graph" width="536" height="322"></p>
+<p><strong>Turns the stroke into a shape, to fill it, combine it or subtract it as one more contour.</strong></p>
 <p>The same expansion Stroke draws, handed back as a <code>shape</code> instead of painted, which is Illustrator's &quot;outline stroke&quot;: the moment a line stops being a property of a shape and becomes a shape of its own. That makes it fillable, combinable with Combine, offset, repeated or exported to SVG, none of which a painted Stroke can do afterward.</p>
 <p>All the geometry rows (<strong>Thickness px</strong>, <strong>Align</strong>, <strong>Cap</strong>, <strong>Join</strong>, <strong>Miter limit</strong>, <strong>Taper %</strong>, the three dash rows) are the identical parameters Stroke uses, on purpose, so a test that fills an Outline and compares it against a Stroke of the same settings is holding a real promise rather than hoping the two look close. Reach for this over Stroke whenever the stroke needs to be combined with something else before it is filled, an outline plus a badge silhouette unioned together, for instance, rather than drawn as a separate pass on top.</p>
 <p><strong>In:</strong> Shape (shape) &middot; <strong>Out:</strong> shape</p>
@@ -129,9 +129,9 @@
 <li><strong>Dash offset px</strong>: 0 .. 64, default 0, only when dashed = on, keyable</li>
 </ul>
 <hr>
-<h2>Vector Transform</h2>
-<p><img src="./gifs/vecxform.gif" alt="Vector Transform demo" width="256" height="256"></p>
-<p><em>Moves, rotates, scales, shears and mirrors the shape by composing a matrix, anchors untouched.</em></p>
+<h2 id="vecxform">Vector Transform</h2>
+<p><img src="./graphs/vecxform.gif" alt="Vector Transform node graph" width="526" height="322"></p>
+<p><strong>Moves, rotates, scales, shears and mirrors the shape by composing a matrix, anchors untouched.</strong></p>
 <p>Moves, rotates, scales, shears and mirrors a shape by composing one matrix: <strong>Move X/Y %</strong>, <strong>Rotate</strong>, <strong>Scale X/Y %</strong> (0-400, so it also shrinks), <strong>Skew X/Y</strong>, plus <strong>Mirror X</strong> and <strong>Mirror Y</strong>, all measured from <strong>Pivot X/Y %</strong>. Nothing here touches a single anchor, the shape underneath is shared and only a transform is hung over it, so stacking several Vector Transforms in a row costs nothing extra and stays exact at any output size.</p>
 <p>Use it the way a Transform layer works in any vector tool: to place a Vector Primitive or a traced shape without baking the change into its points, so a later Offset or Round Corners still measures the original geometry rather than an already-distorted copy. Scaling non-uniformly before a Round Corners will read as an ellipse-shaped fillet rather than a circular one, worth knowing if perfectly round corners matter.</p>
 <p><strong>In:</strong> Shape (shape) &middot; <strong>Out:</strong> shape</p>
@@ -150,9 +150,9 @@
 <li><strong>Mirror Y</strong>: on / off, default off, keyable</li>
 </ul>
 <hr>
-<h2>Combine</h2>
-<p><img src="./gifs/veccombine.gif" alt="Combine demo" width="256" height="256"></p>
-<p><em>Joins, subtracts, cuts or crosses two shapes by combining coverage, clipping no polygon.</em></p>
+<h2 id="veccombine">Combine</h2>
+<p><img src="./graphs/veccombine.gif" alt="Combine node graph" width="572" height="344"></p>
+<p><strong>Joins, subtracts, cuts or crosses two shapes by combining coverage, clipping no polygon.</strong></p>
 <p>Writes down a boolean operator between two shapes, <strong>Union</strong>, <strong>Subtract</strong>, <strong>Intersect</strong> or <strong>Xor</strong>, without ever looking at a single anchor until something downstream forces it to. <strong>Detail px</strong> is the resolution that eventual materialization happens at, since the operator itself has no contours until a Fill, a Trace-adjacent export or another node that has to measure arc length lands it. Raise it if a combined shape looks faceted at a large canvas size, lower it if performance matters more than precision on a small one.</p>
 <p><strong>A</strong> and <strong>B</strong> both take any shape, including another Combine, so a tree of unions and subtracts (a badge shape minus a hole, unioned with a ring) stays one operator tree all the way down and gets rasterized once, at the very end, rather than shape by shape. This is the node that makes stacking Vector nodes cheap instead of expensive.</p>
 <p><strong>In:</strong> A (shape), B (shape) &middot; <strong>Out:</strong> shape</p>
@@ -162,9 +162,9 @@
 <li><strong>Detail px</strong>: 32 .. 512, default 256, keyable</li>
 </ul>
 <hr>
-<h2>Trim Path</h2>
-<p><img src="./gifs/vectrim.gif" alt="Trim Path demo" width="256" height="256"></p>
-<p><em>Trims the shape by arc length: start, end and offset, whole or contour by contour.</em></p>
+<h2 id="vectrim">Trim Path</h2>
+<p><img src="./graphs/vectrim.gif" alt="Trim Path node graph" width="526" height="322"></p>
+<p><strong>Trims the shape by arc length: start, end and offset, whole or contour by contour.</strong></p>
 <p>Cuts a shape by arc length rather than by anchor count, <strong>Start %</strong> and <strong>End %</strong> picking the span that survives, <strong>Offset %</strong> sliding both ends together around the contour. <strong>Mode</strong> (Whole / Per contour) decides whether a multi-contour shape is trimmed as one continuous run or contour by contour, which matters the moment a shape has more than one loop, a Whole trim can eat an entire secondary contour before it ever starts on the first one.</p>
 <p>This is the one node in the algebra family that actually measures instead of just writing down a matrix or an operator, since &quot;half the arc&quot; is not something a matrix can express. It still measures in curve space and splits the underlying cubics rather than a flattened polyline, so what comes out stays resolution independent. Reach for it over stroking a Trace directly whenever only part of an outline should draw, a loading bar traced along a shape, a partial dashed ring.</p>
 <p><strong>In:</strong> Shape (shape) &middot; <strong>Out:</strong> shape</p>
@@ -176,9 +176,9 @@
 <li><strong>Mode</strong>: Whole / Per contour, default Whole, keyable</li>
 </ul>
 <hr>
-<h2>Repeat</h2>
-<p><img src="./gifs/vecrepeat.gif" alt="Repeat demo" width="256" height="256"></p>
-<p><em>Repeats the shape in a line, a grid or a ring, with position, rotation and size steps.</em></p>
+<h2 id="vecrepeat">Repeat</h2>
+<p><img src="./graphs/vecrepeat.gif" alt="Repeat node graph" width="526" height="322"></p>
+<p><strong>Repeats the shape in a line, a grid or a ring, with position, rotation and size steps.</strong></p>
 <p>Stamps N copies of a shape under one union, in a <strong>Linear</strong> line, a <strong>Grid</strong>, or a <strong>Radial</strong> ring, set by <strong>Mode</strong>. <strong>Step X/Y %</strong>, <strong>Step rotate</strong> and <strong>Step scale %</strong> apply once per copy, so a repeat with a <strong>Step scale %</strong> under 100 shrinks with every copy rather than staying uniform, useful for a decaying trail of shapes rather than a plain repeated pattern. <strong>Pivot X/Y %</strong> sets the center Radial mode turns around and Step rotate spins about.</p>
 <p>Because it writes N matrices under a union rather than baking N copies of the geometry, changing <strong>Copies</strong> afterward costs nothing extra to recompute exactly. Watch the step values against the shape's own size, a shape that fills most of the canvas needs a shrinking <strong>Step scale %</strong> or the copies will sit on top of each other rather than reading as a repeated count.</p>
 <p><strong>In:</strong> Shape (shape) &middot; <strong>Out:</strong> shape</p>
@@ -194,9 +194,9 @@
 <li><strong>Pivot Y %</strong>: 0 .. 100, default 50, keyable</li>
 </ul>
 <hr>
-<h2>Shape SDF</h2>
-<p><img src="./gifs/vecsdf.gif" alt="Shape SDF demo" width="256" height="256"></p>
-<p><em>Measures signed distance to the contour and paints it gray, for bevel, glow and halo without blur.</em></p>
+<h2 id="vecsdf">Shape SDF</h2>
+<p><img src="./graphs/vecsdf.gif" alt="Shape SDF node graph" width="526" height="322"></p>
+<p><strong>Measures signed distance to the contour and paints it gray, for bevel, glow and halo without blur.</strong></p>
 <p>Measures the signed distance from every pixel to a shape's contour and writes it out as grey, mid grey exactly on the outline, lighter inside, darker outside (or the reverse with <strong>Signed</strong> off, which folds both sides into one unsigned ramp). This is the one place in the category that reads as an actual measurement rather than a picture, and it is what a bevel, a glow or a halo want without a blur node anywhere in the chain.</p>
 <p><strong>Range px</strong> sets how far the ramp reaches before it saturates, and gets hidden once <strong>Normalize</strong> is on, since normalize measures the field's own widest value instead of asking for one, useful when the shape's scale varies and a fixed range would clip or barely show anything. <strong>Rule</strong> only changes the field where contours overlap or self-intersect, same as it does on Fill.</p>
 <p><strong>In:</strong> Shape (shape) &middot; <strong>Out:</strong> image</p>
@@ -208,9 +208,9 @@
 <li><strong>Normalize</strong>: on / off, default off, keyable</li>
 </ul>
 <hr>
-<h2>Offset</h2>
-<p><img src="./gifs/vecoffset.gif" alt="Offset demo" width="256" height="256"></p>
-<p><em>Grows or shrinks the shape: growing by exact expansion, shrinking by the distance field.</em></p>
+<h2 id="vecoffset">Offset</h2>
+<p><img src="./graphs/vecoffset.gif" alt="Offset node graph" width="526" height="322"></p>
+<p><strong>Grows or shrinks the shape: growing by exact expansion, shrinking by the distance field.</strong></p>
 <p>Grows or shrinks a shape by a fixed number of pixels, <strong>Offset px</strong> negative for shrinking, positive for growing, crossing zero in the default demo range because the two directions are built differently under the hood: growing (<strong>Mode: Shape</strong>) is an exact stroke expansion with real <strong>Join</strong> control (Round is the default because that agrees with how &quot;offset by n pixels&quot; reads everywhere else in a paint program, Miter exists for a star whose points need to stay pointed), while <strong>Mode: Coverage</strong> reads the distance field instead and has no joins to speak of.</p>
 <p>At small offsets the two modes look close on a rounded shape and differ more on anything with sharp corners. Use this ahead of a Fill to pad a silhouette out for a border, or negative to inset a badge before stroking a thin rim inside it.</p>
 <p><strong>In:</strong> Shape (shape) &middot; <strong>Out:</strong> shape</p>
@@ -222,9 +222,9 @@
 <li><strong>Miter limit</strong>: 1 .. 20, default 4, only when join = Miter; only when mode = Shape, keyable</li>
 </ul>
 <hr>
-<h2>Round Corners</h2>
-<p><img src="./gifs/vecround.gif" alt="Round Corners demo" width="256" height="256"></p>
-<p><em>Rounds the shape corners with a radius in pixels, equal for all or scaled per anchor.</em></p>
+<h2 id="vecround">Round Corners</h2>
+<p><img src="./graphs/vecround.gif" alt="Round Corners node graph" width="526" height="322"></p>
+<p><strong>Rounds the shape corners with a radius in pixels, equal for all or scaled per anchor.</strong></p>
 <p>Rounds every corner of a shape by a radius in pixels, <strong>Global</strong> applying the same <strong>Radius px</strong> everywhere or <strong>Per anchor</strong> letting the radius scale down at corners too tight to take the full amount. <strong>Min angle</strong> sets how sharp a corner has to be before it gets rounded at all, a nearly-straight vertex under that angle is left alone rather than turned into a barely visible fillet.</p>
 <p>It reads best on shapes with real corners, a Star's five points are the clearest demonstration, since the corners of a star stop changing well before the radius slider runs out its full reach. Past a certain radius on a small shape the rounding will eat into the shape's own silhouette rather than just softening the corner, worth checking against the shape's own size before pushing the radius high.</p>
 <p><strong>In:</strong> Shape (shape) &middot; <strong>Out:</strong> shape</p>
@@ -235,9 +235,9 @@
 <li><strong>Min angle</strong>: 0 .. 90, default 10, keyable</li>
 </ul>
 <hr>
-<h2>Trace</h2>
-<p><img src="./gifs/vectrace.gif" alt="Trace demo" width="256" height="256"></p>
-<p><em>Turns pixels into contours at a threshold, with exact corners or curve fitting.</em></p>
+<h2 id="vectrace">Trace</h2>
+<p><img src="./graphs/vectrace.gif" alt="Trace node graph" width="432" height="322"></p>
+<p><strong>Turns pixels into contours at a threshold, with exact corners or curve fitting.</strong></p>
 <p>Turns pixels into contours at a <strong>Threshold</strong>, reading either the <strong>Alpha</strong> channel or <strong>Luma</strong> (Luma is the one to pick on an opaque photograph-like source, since Alpha alone would just trace the whole canvas as one square). <strong>Blocky</strong> is on by default, which keeps the trace exact, refilling the result Aliased gives back the same pixels that went in, the promise a pixel-art tool has to make about its own tracer. Turn it off and <strong>Simplify px</strong> and <strong>Fit: Curves</strong> (with <strong>Fit error px</strong>) appear for a smoothed vector result instead.</p>
 <p><strong>Min island px</strong> drops islands below that pixel count, useful for cleaning a noisy trace before it feeds a Combine or an Offset. <strong>Holes</strong> keeps or drops interior counters (the hole in an &quot;O&quot;, a doughnut shape), turn it off if a shape traced from a ring should come back solid.</p>
 <p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> shape</p>
@@ -253,9 +253,9 @@
 <li><strong>Holes</strong>: on / off, default on, keyable</li>
 </ul>
 <hr>
-<h2>Simplify</h2>
-<p><img src="./gifs/vecsimplify.gif" alt="Simplify demo" width="256" height="256"></p>
-<p><em>Drops redundant points from the shape, fits curves on request and snaps anchors to the grid.</em></p>
+<h2 id="vecsimplify">Simplify</h2>
+<p><img src="./graphs/vecsimplify.gif" alt="Simplify node graph" width="526" height="322"></p>
+<p><strong>Drops redundant points from the shape, fits curves on request and snaps anchors to the grid.</strong></p>
 <p>Drops anchors a shape does not need, <strong>Simplify px</strong> the tolerance a point can move before it is considered redundant, <strong>Fit: Curves</strong> (with <strong>Fit error px</strong>) turning the remaining polyline into proper cubic curves instead of straight segments between the kept points. <strong>Snap</strong> (Off / Pixel / Half pixel) rounds anchors onto the grid afterward, which is worth turning on before an Export SVG of something meant to read as crisp pixel art rather than as slightly-off-grid vector art.</p>
 <p><strong>Detail px</strong> is the resolution a lazy shape gets landed at before this node can measure it, the same row Combine, Wind and Trim all carry for the same reason. At small values (under 5 or so) a well-simplified shape looks unchanged, since that is exactly what a clean trace or a Vector Primitive should look like already, the effect shows on a noisy or over-sampled contour.</p>
 <p><strong>In:</strong> Shape (shape) &middot; <strong>Out:</strong> shape</p>
@@ -268,9 +268,9 @@
 <li><strong>Detail px</strong>: 32 .. 512, default 256, keyable</li>
 </ul>
 <hr>
-<h2>Import SVG</h2>
-<p><img src="./gifs/vecsvg.gif" alt="Import SVG demo" width="256" height="256"></p>
-<p><em>Reads a pasted or loaded SVG: paths, basic shapes and their transform, and counts what it skips.</em></p>
+<h2 id="vecsvg">Import SVG</h2>
+<p><img src="./graphs/vecsvg.gif" alt="Import SVG node graph" width="244" height="300"></p>
+<p><strong>Reads a pasted or loaded SVG: paths, basic shapes and their transform, and counts what it skips.</strong></p>
 <p>Reads an SVG document, either pasted as <strong>Source: Text</strong> or loaded from <strong>Source: File</strong>, parsing paths and basic shapes (rects, circles, ellipses, lines, polygons) along with their own transforms. <strong>Fit</strong> (Stretch, Fit, Native) decides how the imported drawing lands inside the shape's own 0..1 square: Stretch fills it ignoring proportions, Fit keeps them and letterboxes, Native keeps the original units untouched. <strong>Flip Y</strong> matters because SVG's Y axis points down while this engine's shapes do not assume either direction.</p>
 <p>This is the door from the rest of the world into the category, a drawing made in Inkscape or Figma lands on the same <code>shape</code> wire a Vector Primitive does, so Fill, Stroke, Combine and everything else work on it unchanged. Whatever the parser could not read (a gradient, a filter, text-as-text rather than as outlines) is silently skipped rather than failing the whole import, worth checking a complex import's result against the source if something looks missing.</p>
 <p><strong>In:</strong> nothing &middot; <strong>Out:</strong> shape</p>

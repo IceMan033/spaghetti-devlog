@@ -18,9 +18,9 @@
 <p>Six nodes, and only two of them are a plain blur. Blur itself covers box, gaussian and four flavors of directional smear in one node; Sharpen and Min Max push in the opposite direction, sharpening or actually moving an edge instead of softening it; Slope Blur and Non Uniform Blur read a second image to decide where and which way to drag pixels; Distance measures instead of filtering, turning a silhouette into a height field.</p>
 <p>I use Blur constantly and the other five occasionally, each for a specific job: Non Uniform Blur for a depth-of-field style falloff, Slope Blur for an erosion look, Distance to build a rounded highlight or an outline from nothing but alpha. None of them touch color, only how detail is spread or measured across the image.</p>
 <hr>
-<h2>Blur</h2>
-<p><img src="./gifs/blur.gif" alt="Blur demo" width="256" height="256"></p>
-<p><em>Blurs in box, gaussian, directional, radial or spin form, or by an angle map.</em></p>
+<h2 id="blur">Blur</h2>
+<p><img src="./graphs/blur.gif" alt="Blur node graph" width="442" height="344"></p>
+<p><strong>Blurs in box, gaussian, directional, radial or spin form, or by an angle map.</strong></p>
 <p><strong>Type</strong> picks the shape: <strong>Box</strong> is the plain uniform blur and the cheapest; <strong>Gaussian</strong> runs two box passes at different radii for a softer falloff with less of the box's visible square edge; <strong>Directional</strong> streaks along a fixed <strong>Angle</strong>; <strong>Radial</strong> streaks outward from the canvas center (a zoom blur); <strong>Spin</strong> streaks around the center instead of away from it; <strong>Anisotropic</strong> reads its direction per pixel from a wired <strong>Angle map</strong>, so the streak can follow a flow field or a normal map instead of one fixed angle.</p>
 <p><strong>Radius</strong> (1 to 16) is the one number that matters everywhere; past 8 or so at typical pixel-art canvas sizes the result stops reading as blur and starts reading as smear. I use Gaussian at low radius to prep a Glow input, and Anisotropic with a Noise wired into Angle map for a wood grain or brushed metal streak that a fixed-angle Directional blur cannot fake.</p>
 <p><strong>In:</strong> In (image), Angle map (image) &middot; <strong>Out:</strong> image</p>
@@ -31,9 +31,9 @@
 <li><strong>Angle</strong>: 0 .. 359, default 0, only when kind = Directional / Anisotropic, keyable</li>
 </ul>
 <hr>
-<h2>Slope Blur</h2>
-<p><img src="./gifs/slopeblur.gif" alt="Slope Blur demo" width="256" height="256"></p>
-<p><em>Drags pixels downhill along the slope of the map you feed it.</em></p>
+<h2 id="slopeblur">Slope Blur</h2>
+<p><img src="./graphs/slopeblur.gif" alt="Slope Blur node graph" width="808" height="344"></p>
+<p><strong>Drags pixels downhill along the slope of the map you feed it.</strong></p>
 <p>Reads a <strong>Slope</strong> map's local gradient and drags each pixel downhill along it, repeating for <strong>Samples</strong> steps and combining what it picks up along the way by <strong>Mode</strong>: <strong>Average</strong> smears and blends, <strong>Min</strong> and <strong>Max</strong> instead keep the darkest or lightest sample found, which reads as an erosion or a deposit rather than a soft drag. <strong>Intensity</strong> sets how far each step moves in pixels.</p>
 <p>This is the node behind a stylized erosion look: wire a height field into Slope and the color image drags along its contours, pooling into the low points. <strong>Mode</strong> Max on a noise slope reads like sediment or snow catching in the cracks; Min reads like dirt settling into the same cracks with the opposite tone. With no Slope wired the node passes the input through unchanged rather than doing nothing useful with a flat gradient.</p>
 <p><strong>In:</strong> In (image), Slope (image) &middot; <strong>Out:</strong> image</p>
@@ -44,9 +44,9 @@
 <li><strong>Samples</strong>: 2 .. 16, default 8, keyable</li>
 </ul>
 <hr>
-<h2>Non Uniform Blur</h2>
-<p><img src="./gifs/nublur.gif" alt="Non Uniform Blur demo" width="256" height="256"></p>
-<p><em>Blurs heavily where the mask is bright and not at all where it is black.</em></p>
+<h2 id="nublur">Non Uniform Blur</h2>
+<p><img src="./graphs/nublur.gif" alt="Non Uniform Blur node graph" width="432" height="344"></p>
+<p><strong>Blurs heavily where the mask is bright and not at all where it is black.</strong></p>
 <p>Blurs by however bright the <strong>Mask</strong> is at each pixel, up to <strong>Max radius</strong> where the mask is pure white, not at all where it is black; <strong>Invert mask</strong> flips that reading. Internally it interpolates between a few fixed blur strengths rather than computing a true per-pixel radius, which keeps it fast at higher radii.</p>
 <p>The standard use is a depth-of-field fake: a radial gradient or a Distance output as the mask gives you a sharp foreground and a soft background (or the reverse, with Invert mask) without hand-painting a blur amount. With no Mask wired the node returns the input untouched, so it is safe to leave unconnected while wiring up the rest of a graph.</p>
 <p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
@@ -56,9 +56,9 @@
 <li><strong>Invert mask</strong>: on / off, default off, keyable</li>
 </ul>
 <hr>
-<h2>Sharpen</h2>
-<p><img src="./gifs/sharpen.gif" alt="Sharpen demo" width="256" height="256"></p>
-<p><em>Sharpens edges by subtracting a smoothed version of the input.</em></p>
+<h2 id="sharpen">Sharpen</h2>
+<p><img src="./graphs/sharpen.gif" alt="Sharpen node graph" width="808" height="344"></p>
+<p><strong>Sharpens edges by subtracting a smoothed version of the input.</strong></p>
 <p>An unsharp mask: <strong>Intensity</strong> (0 to 100) sets how strongly the difference between the pixel and its blurred 3x3 neighborhood gets added back. At 0 it is the identity, no extra pass, no cost. Alpha is left alone, only color sharpens.</p>
 <p>I keep this well under 50 on pixel art; the fixed 3x3 kernel is aggressive at small canvas sizes and starts ringing (a pale halo around every edge) faster than it would on a photograph. It is a good last step after a Blur that softened detail you want back selectively, or after scaling a texture down when the downscale itself softened edges.</p>
 <p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
@@ -68,9 +68,9 @@
 <li><strong>Invert mask</strong>: on / off, default off, keyable</li>
 </ul>
 <hr>
-<h2>Min Max</h2>
-<p><img src="./gifs/minmax.gif" alt="Min Max demo" width="256" height="256"></p>
-<p><em>Grows or shrinks the bright areas by taking the neighborhood maximum or minimum.</em></p>
+<h2 id="minmax">Min Max</h2>
+<p><img src="./graphs/minmax.gif" alt="Min Max node graph" width="432" height="344"></p>
+<p><strong>Grows or shrinks the bright areas by taking the neighborhood maximum or minimum.</strong></p>
 <p><strong>Mode</strong> <strong>Dilate</strong> grows the bright areas, <strong>Erode</strong> shrinks them, both by <strong>Radius</strong> pixels measured as an actual neighborhood maximum or minimum, not a blur: the edge genuinely moves rather than fading. Read on alpha or luminance depending on what carries the shape.</p>
 <p>Use Dilate to pad a silhouette a couple of pixels before an Outline or a Bevel so the effect has room to work without eating into the shape; use Erode to clean up a noisy mask by shrinking away single-pixel fringes before growing it back with Dilate (an opening pass). <strong>Invert mask</strong> works on the node's own Mask input as usual.</p>
 <p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
@@ -81,9 +81,9 @@
 <li><strong>Invert mask</strong>: on / off, default off, keyable</li>
 </ul>
 <hr>
-<h2>Distance</h2>
-<p><img src="./gifs/distance.gif" alt="Distance demo" width="256" height="256"></p>
-<p><em>Measures how far each pixel lies from the edge of the silhouette, signed or as a mask.</em></p>
+<h2 id="distance">Distance</h2>
+<p><img src="./graphs/distance.gif" alt="Distance node graph" width="432" height="344"></p>
+<p><strong>Measures how far each pixel lies from the edge of the silhouette, signed or as a mask.</strong></p>
 <p>Measures, per pixel, how far it sits from the edge of the silhouette read off <strong>Source</strong> (<strong>Auto</strong> picks alpha if the input has any transparency, luminance otherwise). <strong>Output</strong> <strong>Distance</strong> is black outside the shape and brightens toward the interior, capped at <strong>Range (px)</strong>; <strong>Signed</strong> instead sits at mid grey exactly on the edge, lighter outside and darker inside within plus or minus Range; <strong>Mask</strong> redraws the silhouette flat, ignoring Range.</p>
 <p><strong>Combine mask</strong> blends a second wired image's field into the first with <strong>Min</strong> or <strong>Max</strong>, which on the Signed reading is a union or an intersection of the two shapes rather than a plain overlay. <strong>Tiling</strong> wraps the measurement across the canvas edges. I use the Signed output straight into a Curve or a Gradient Map for a rounded highlight along a shape's rim, which is a cheap alternative to a real Bevel when only a couple of tones are needed.</p>
 <p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
