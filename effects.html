@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spaghetti node guide: Effects</title>
+<style>
+  body { max-width: 44rem; margin: 2rem auto; padding: 0 1rem;
+    font: 16px/1.55 system-ui, sans-serif; background: #1b1b1f; color: #e4e4e4; }
+  a { color: #7fb6ff; } code { background: #2a2a30; padding: 0 .25em; }
+  img { image-rendering: pixelated; border: 1px solid #333; }
+  hr { border: 0; border-top: 1px solid #333; margin: 2.5rem 0; }
+</style>
+</head>
+<body>
+<p><a href="index.html">All folders</a></p>
+<h1>Spaghetti node guide: Effects</h1>
+<p>This is the largest and least uniform filter family: geometric distortion (Warp, Swirl, Pixelate, Path Warp), relief and lighting (Bevel, Emboss, Curvature), region labeling (Flood Fill, Cluster), screen and lens looks (Chromatic Aberration, Vignette, Scanlines), and the pixel-art cleanup tools that only make sense at low resolution (Outline, Pixel Clean, Extend Shape, Pixel AA, Median). Edge and FX round it out with a Sobel/outline detector and a glow/drop shadow compositor.</p>
+<p>Nineteen nodes is too many to have one shape of use, so treat this file as a reference more than a tour: skip to whichever node the job calls for. A few of them lean on each other in practice, Bevel or Curvature feeding an Emboss, Flood Fill feeding a Gradient Map, Outline and Pixel Clean both reading the same Auto/Alpha/Luminance silhouette rule, and the guide calls those pairings out where they matter.</p>
+<hr>
+<h2>Edge</h2>
+<p><img src="./gifs/edge.gif" alt="Edge demo" width="256" height="256"></p>
+<p><em>Marks edges with Sobel, or traces a one-pixel outline.</em></p>
+<p><strong>Type</strong> <strong>Sobel</strong> finds edges by gradient magnitude and outputs grayscale, <strong>Intensity</strong> as a gain and <strong>Width</strong> (1 to 4) fattening the line by dilation rather than blur, so a wide line still stays crisp. <strong>Type</strong> <strong>Outline</strong> instead traces a flat one-pixel contour right outside the alpha silhouette in a fixed <strong>Color</strong>.</p>
+<p>Sobel is the one to reach for on a height field or a noisy texture, wood grain, cracks, surface detail, since it reads gradient rather than silhouette. The Outline mode here is a quick single-pixel line; if you need thickness, side control (inside, outside or both) or the line pulling color from a ramp, use the dedicated Outline node instead, this one is the cheap single-purpose version. <strong>Invert mask</strong> applies to the node's own Mask input.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Type</strong>: Sobel / Outline, default Sobel, keyable</li>
+<li><strong>Intensity</strong>: 0 .. 100, default 50, only when kind = Sobel, keyable</li>
+<li><strong>Width</strong>: 1 .. 4, default 1, only when kind = Sobel, keyable</li>
+<li><strong>Color</strong>: colour, default #000000, only when kind = Outline, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Bevel</h2>
+<p><img src="./gifs/bevel.gif" alt="Bevel demo" width="256" height="256"></p>
+<p><em>Raises a chamfer along the silhouette edge and outputs height or normals.</em></p>
+<p>Builds a chamfer height ramp inward from the silhouette edge, over <strong>Width</strong> pixels, using <strong>Profile</strong> <strong>Linear</strong> for a straight ramp or <strong>Round</strong> for a softer curve near the top (a square-root falloff). <strong>Source</strong> <strong>Auto</strong> reads alpha normally but falls back to luminance automatically when the input has no transparency at all, a Pattern node has no alpha to read, so a texture generator plugged straight in still gets a usable silhouette. <strong>Output</strong> <strong>Height</strong> returns the grayscale ramp for chaining into Emboss, Gradient Map or Curve; <strong>Output</strong> <strong>Normal</strong> converts it straight into a normal map, with <strong>Normal strength</strong> as the intensity that goes into the conversion.</p>
+<p>I use this for the classic pixel-art gem or button rim light: Bevel into Gradient Map with a light-to-dark ramp gives a beveled edge in two nodes. <strong>Invert mask</strong> applies to the node's own Mask input.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Width</strong>: 1 .. 16, default 4, keyable</li>
+<li><strong>Profile</strong>: Linear / Round, default Linear, keyable</li>
+<li><strong>Source</strong>: Auto / Alpha / Luminance, default Auto, keyable</li>
+<li><strong>Output</strong>: Height / Normal, default Height, keyable</li>
+<li><strong>Normal strength</strong>: 0 .. 100, default 50, only when output = Normal, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Emboss</h2>
+<p><img src="./gifs/emboss.gif" alt="Emboss demo" width="256" height="256"></p>
+<p><em>Carves the input into relief, lit from the angle you choose.</em></p>
+<p>Shades the input as relief, lit from <strong>Light angle</strong>, using a wired <strong>Height</strong> image as the surface if one is plugged in or the input's own color as height otherwise. <strong>Intensity</strong> scales how strong the resulting highlight and shadow read.</p>
+<p>The difference between using the input's own color and wiring a dedicated height map is the difference between a cheap fake relief (works fine on already-contrasty art) and a controlled one: feed a Bevel's height output or a Curvature result into <strong>Height</strong> for a relief that follows an actual shape rather than whatever brightness pattern the color happened to have. Because the input's own color is what gets shaded, this reads as a surface finish more than a pure lighting pass; it keeps the original hue and just pushes value around it.</p>
+<p><strong>In:</strong> In (image), Height (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Light angle</strong>: 0 .. 359, default 45, keyable</li>
+<li><strong>Intensity</strong>: 0 .. 100, default 50, keyable</li>
+</ul>
+<hr>
+<h2>Curvature</h2>
+<p><img src="./gifs/curvature.gif" alt="Curvature demo" width="256" height="256"></p>
+<p><em>Marks ridges bright and valleys dark on a height map.</em></p>
+<p>A signed highpass of a height field: <strong>Radius</strong> sets how coarse the local comparison is, and the output sits at mid grey where the surface is flat, brighter where it is convex (a ridge), darker where it is concave (a valley or crack). <strong>Intensity</strong> is a straight gain on how far from grey the result swings.</p>
+<p>Feed this a height map (Bevel's Height output, a Noise, a hand-painted grayscale) rather than a color image; the whole point is measuring curvature of a surface, not color contrast. The node's own intent is dirt and wear: push a Curvature result through a Levels or a Threshold tuned to keep only the darkest values and you get a mask of exactly the concave cracks and seams, ready to multiply a grime color into.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Radius</strong>: 1 .. 16, default 2, keyable</li>
+<li><strong>Intensity</strong>: 0 .. 100, default 50, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Flood Fill</h2>
+<p><img src="./gifs/floodfill.gif" alt="Flood Fill demo" width="256" height="256"></p>
+<p><em>Labels each connected island and gives it its own color, size, position or index.</em></p>
+<p>Labels every 4-connected island of pixels above <strong>Threshold</strong> luminance and paints each island one flat value by <strong>Type</strong>: <strong>Random Color</strong> or <strong>Random Grayscale</strong> for a per-island random fill (<strong>Seed</strong> reseeds it); <strong>Gradient</strong> draws a per-island directional ramp along <strong>Angle</strong>, with <strong>Angle RNG</strong> jittering that angle differently for every island so a field of cells does not all gradient the same way; <strong>BBox Size</strong> reads each island's bounding-box diagonal relative to the largest one present; <strong>Position</strong> and <strong>Position XY</strong> read the island's centroid, <strong>Position XY</strong> splitting X into red and Y into green so an RGBA Split downstream can use them separately; <strong>Index</strong> ramps islands by scan order. <strong>Wrap islands</strong> lets an island crossing the canvas edge still count as one, keeping the result tileable; <strong>Invert input</strong> flips which side of Threshold counts as filled.</p>
+<p>I use this on cellular or Voronoi-style noise to get flat stained-glass or rock-plate color regions, then a Gradient Map or an Outline on top.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Type</strong>: Random Color / Random Grayscale / Gradient / BBox Size / Position / Position XY / Index, default Random Color, keyable</li>
+<li><strong>Threshold</strong>: 1 .. 255, default 128, keyable</li>
+<li><strong>Seed</strong>: 1 .. 9999999999, default 1, only when kind = Random Color / Random Grayscale / Gradient, keyable</li>
+<li><strong>Angle</strong>: 0 .. 359, default 0, only when kind = Gradient / Position, keyable</li>
+<li><strong>Angle RNG</strong>: 0 .. 100, default 0, only when kind = Gradient, keyable</li>
+<li><strong>Wrap islands</strong>: on / off, default on, keyable</li>
+<li><strong>Invert input</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Warp</h2>
+<p><img src="./gifs/warp.gif" alt="Warp demo" width="256" height="256"></p>
+<p><em>Pushes pixels according to a map: by direction, gradient, vector or morph.</em></p>
+<p>Pushes pixels according to a wired <strong>Map</strong>, and <strong>Type</strong> decides how the map is read. <strong>Directional</strong> reads the map's luminance as a push amount along a fixed <strong>Angle</strong>. <strong>Gradient</strong> instead reads the map's own local gradient as the push direction, bending the image along the map's contours rather than one fixed way. <strong>Vector</strong> reads the map's red and green channels as an X/Y displacement, exactly what a normal map or a Path's normal output produces. <strong>Multi</strong> runs two Directional passes ninety degrees apart for a wobble on both axes at once. <strong>Morph</strong> pulls In along the map's vector and a wired third image against it, then cross-fades the two by <strong>Morph amount</strong>, a warp and a dissolve in one step instead of a plain blend.</p>
+<p><strong>Intensity</strong> scales how far the push reaches in every mode. With no Map wired the input passes through untouched.</p>
+<p><strong>In:</strong> In (image), Map (image), B (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Type</strong>: Directional / Gradient / Vector / Multi / Morph, default Directional, keyable</li>
+<li><strong>Intensity</strong>: 0 .. 100, default 50, keyable</li>
+<li><strong>Angle</strong>: 0 .. 359, default 0, only when kind = Directional / Multi, keyable</li>
+<li><strong>Morph amount</strong>: 0 .. 100, default 50, only when kind = Morph, keyable</li>
+</ul>
+<hr>
+<h2>Swirl</h2>
+<p><img src="./gifs/swirl.gif" alt="Swirl demo" width="256" height="256"></p>
+<p><em>Twists the image around the center, within a radius.</em></p>
+<p>Rotates the image around its center by <strong>Strength</strong> (negative reverses direction), falling off smoothly from full rotation at the center to none at the edge of <strong>Radius %</strong>; outside that radius pixels are untouched entirely, not merely rotated less.</p>
+<p>A small Strength across the whole canvas gives a subtle vortex; a strong Strength with Radius % pulled down to 20 or 30 gives a tight, localized whirlpool or portal instead, since the falloff still happens within that smaller circle. <strong>Invert mask</strong> applies to the node's own Mask input, letting you protect part of the image from the twist.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Strength</strong>: -100 .. 100, default 50, keyable</li>
+<li><strong>Radius %</strong>: 1 .. 100, default 80, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Pixelate</h2>
+<p><img src="./gifs/pixelate.gif" alt="Pixelate demo" width="256" height="256"></p>
+<p><em>Enlarges the pixels into square blocks of N by N.</em></p>
+<p>Enlarges pixels into flat <strong>Block</strong> by <strong>Block</strong> squares, always sampling from the center of each block rather than a corner, so the blocks stay aligned across the canvas even where the size does not divide it evenly. A blunt, reliable chunky downsample with <strong>Invert mask</strong> to protect part of the image from it.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Block</strong>: 2 .. 32, default 4, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>FX</h2>
+<p><img src="./gifs/fx.gif" alt="FX demo" width="256" height="256"></p>
+<p><em>Adds glow or drop shadow around the silhouette.</em></p>
+<p><strong>Type</strong> <strong>Glow</strong> blurs the input's silhouette into a soft halo of <strong>Color</strong>, with <strong>Radius</strong> as the blur size and <strong>Intensity</strong> boosting the halo's opacity well past what the blur alone would give, so a small radius still reads as a real glow rather than a faint smudge. <strong>Type</strong> <strong>Drop Shadow</strong> offsets the silhouette by <strong>Angle</strong> and <strong>Distance</strong>, then optionally softens it with a small blur when <strong>Radius</strong> is above 1.</p>
+<p>Both composite behind the original artwork, never over it, and the offset sampling for Drop Shadow does not wrap around canvas edges, so a shadow near the border falls off cleanly instead of bleeding in from the opposite side. This is the fast way to get a torch glow or a UI panel's drop shadow without a separate Blur plus manual compositing.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Type</strong>: Glow / Drop Shadow, default Glow, keyable</li>
+<li><strong>Color</strong>: colour, default #ffffff, keyable</li>
+<li><strong>Radius</strong>: 1 .. 16, default 4, keyable</li>
+<li><strong>Intensity</strong>: 0 .. 100, default 80, keyable</li>
+<li><strong>Angle</strong>: 0 .. 359, default 45, only when kind = Drop Shadow, keyable</li>
+<li><strong>Distance</strong>: 1 .. 16, default 3, only when kind = Drop Shadow, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Outline</h2>
+<p><img src="./gifs/outline.gif" alt="Outline demo" width="256" height="256"></p>
+<p><em>Traces a contour outside, inside or on both sides of the silhouette.</em></p>
+<p>Traces the silhouette's contour on <strong>Side</strong> Outside, Inside or Both, <strong>Thickness</strong> pixels wide, with <strong>Corners</strong> Sharp (8-connected) or Round. <strong>Colour</strong> beyond <strong>Fixed colour</strong> reads from a wired Ramp: darkest or lightest stop, or a specific <strong>Ramp index</strong>. The two neighbour modes work differently from a flat color entirely: <strong>Darken neighbour</strong> and <strong>Lighten neighbour</strong> paint each ring pixel using the color of the actual shape pixel it touches, darkened or lightened by <strong>Amount %</strong>, so the outline reads as shading pulled from the sprite itself rather than a separate ink line. <strong>Output</strong> <strong>Outline only</strong> isolates the ring on transparency instead of compositing over the input.</p>
+<p><strong>Shape from</strong> Auto/Alpha/Luminance and <strong>Wrap around</strong> match the same silhouette rule used by Bevel, Curvature and Pixel Clean, so a Pattern with no alpha still gets a usable outline. Darken/Lighten neighbour is the one I use most on finished pixel art, since it never adds a color that was not already in the sprite.</p>
+<p><strong>In:</strong> In (image), Ramp (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Side</strong>: Outside / Inside / Both, default Outside, keyable</li>
+<li><strong>Thickness</strong>: 1 .. 8, default 1, keyable</li>
+<li><strong>Corners</strong>: Sharp / Round, default Sharp, keyable</li>
+<li><strong>Colour</strong>: Fixed / Ramp darkest / Ramp lightest / Ramp index / Darken neighbour / Lighten neighbour, default Fixed, keyable</li>
+<li><strong>Fixed colour</strong>: colour, default #000000, keyable</li>
+<li><strong>Ramp index</strong>: 1 .. 64, default 1, only when colorMode = Ramp index, keyable</li>
+<li><strong>Amount %</strong>: 0 .. 100, default 40, only when colorMode = Darken neighbour / Lighten neighbour, keyable</li>
+<li><strong>Output</strong>: Composite / Outline only, default Composite, keyable</li>
+<li><strong>Shape from</strong>: Auto / Alpha / Luminance, default Auto, keyable</li>
+<li><strong>Wrap around</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Pixel Clean</h2>
+<p><img src="./gifs/pixelclean.gif" alt="Pixel Clean demo" width="256" height="256"></p>
+<p><em>Removes bent corners and stray pixels, or smooths the stair steps.</em></p>
+<p>Three unrelated cleanup passes under one <strong>Mode</strong>. <strong>Dejaggy</strong> removes the doubled corner Aseprite calls the pixel-perfect artifact, a shape pixel with exactly two orthogonal neighbors and nothing filling the diagonal between them, without touching a real solid corner (which does have that diagonal filled). <strong>Anti-alias</strong> finds a background pixel tucked into a right-angle step and blends it toward the mean of its two shape neighbors at <strong>AA opacity</strong>. <strong>Despeckle</strong> removes 4-connected islands of <strong>Speck size</strong> pixels or smaller outright.</p>
+<p><strong>Shape from</strong> and <strong>Wrap around</strong> work exactly like Bevel and Outline's silhouette rule. I run Dejaggy after any vector-to-raster export before doing anything else to the shape; the doubled corners it targets throw off Bevel and Curvature's distance measurement if left in.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Mode</strong>: Dejaggy / Anti-alias / Despeckle, default Dejaggy, keyable</li>
+<li><strong>AA opacity</strong>: 0 .. 100, default 50, only when mode = Anti-alias, keyable</li>
+<li><strong>Speck size</strong>: 1 .. 64, default 2, only when mode = Despeckle, keyable</li>
+<li><strong>Shape from</strong>: Auto / Alpha / Luminance, default Auto, keyable</li>
+<li><strong>Wrap around</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Extend Shape</h2>
+<p><img src="./gifs/extendshape.gif" alt="Extend Shape demo" width="256" height="256"></p>
+<p><em>Pushes color a few pixels outside the silhouette without touching alpha.</em></p>
+<p>Pushes color outward from the opaque silhouette by <strong>Distance</strong> pixels without touching alpha at all, spreading from whichever already-filled neighbor is found first each step (<strong>Corners</strong> Sharp adds the diagonals to that search, Round is orthogonal only).</p>
+<p>This fixes the halo that texture filtering leaves around a sprite's edge when it gets scaled or rotated with any kind of smoothing: the filter samples a few pixels past the alpha edge, and if those pixels are transparent black, that black bleeds in as a dark fringe. Running Extend Shape first means the filter samples more of the sprite's own color out there instead. <strong>Wrap around</strong> matches the same option elsewhere in this family.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Distance</strong>: 1 .. 16, default 2, keyable</li>
+<li><strong>Corners</strong>: Sharp / Round, default Sharp, keyable</li>
+<li><strong>Wrap around</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Path Warp</h2>
+<p><img src="./gifs/pathwarp.gif" alt="Path Warp demo" width="256" height="256"></p>
+<p><em>Straightens the image along the curve, in a band of N pixels.</em></p>
+<p>Straightens a band of the input along a wired <strong>Curve</strong>, <strong>Width px</strong> pixels wide, <strong>Taper %</strong> narrowing that band toward both ends of the path. <strong>Repeats</strong> tiles the source along the path's length instead of stretching it once; <strong>Closed</strong> and <strong>Smooth (Catmull-Rom)</strong> mirror the same options on the Path node itself, and <strong>Wrap around</strong> samples past the source's own edges instead of clipping when the path runs longer than the input.</p>
+<p>The job this is built for: paint a straight strip, a rope's twist pattern, a river's ripple, a corridor's floor tiles, then bend it along a hand-drawn Path Source curve so it follows an actual level shape instead of staying straight. <strong>Repeats</strong> is what makes a short tileable strip cover a long winding path without stretching it thin.</p>
+<p><strong>In:</strong> In (image), Curve (path) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Closed</strong>: on / off, default off, keyable</li>
+<li><strong>Smooth (Catmull-Rom)</strong>: on / off, default on, keyable</li>
+<li><strong>Taper %</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Width px</strong>: 1 .. 64, default 16, keyable</li>
+<li><strong>Repeats</strong>: 1 .. 8, default 1, keyable</li>
+<li><strong>Wrap around</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Median</h2>
+<p><img src="./gifs/median.gif" alt="Median demo" width="256" height="256"></p>
+<p><em>Replaces each pixel with the median of its neighborhood: specks vanish, edges stay put.</em></p>
+<p>Replaces each pixel with the median of its neighborhood over <strong>Radius (px)</strong>, which removes speckle noise while keeping real edges sharp, unlike a blur which softens both. <strong>Channels</strong> <strong>RGB</strong> runs the median separately per channel; <strong>Luminance</strong> instead computes one grey median and copies it into all three channels, cheaper and the better choice when the result is meant to be read as a height field rather than kept in color.</p>
+<p>I use this to clean single stray pixels out of a Blue Noise or a scatter result before it goes further down the graph, somewhere a Cluster node cannot reach because the noise is not made of flat color regions yet. <strong>Invert mask</strong> applies to the node's own Mask input as usual.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Radius (px)</strong>: 1 .. 8, default 1, keyable</li>
+<li><strong>Channels</strong>: RGB / Luminance, default RGB, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Chromatic Aberration</h2>
+<p><img src="./gifs/chromatic.gif" alt="Chromatic Aberration demo" width="256" height="256"></p>
+<p><em>Splits two color channels in opposite directions, radially or along one angle.</em></p>
+<p>Splits two of the three color channels apart in opposite directions, the third stays put, which is what makes the fringe read as a lens rather than a blur. <strong>Mode</strong> <strong>Radial</strong> scales the split by distance from the canvas center, zero in the middle and full <strong>Shift (px)</strong> at the corner, the way a real lens actually fringes; <strong>Linear</strong> instead pushes uniformly along a fixed <strong>Angle</strong>. <strong>Channels</strong> picks which pair splits: <strong>RB</strong> is the classic red/blue fringe, <strong>RG</strong> and <strong>GB</strong> shift the look toward yellow/blue or a colder cast.</p>
+<p>Sampling is nearest-neighbor by design, no softening on top of the split, so at pixel-art scale this reads as a clean glitch or lens artifact rather than a haze. Small Shift values on Radial are enough at typical canvas sizes; past 3 or 4 pixels the effect stops looking like a lens and starts looking broken (which is sometimes exactly what you want for a glitch effect).</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Mode</strong>: Radial / Linear, default Radial, keyable</li>
+<li><strong>Shift (px)</strong>: -32 .. 32, default 2, keyable</li>
+<li><strong>Angle</strong>: 0 .. 359, default 0, only when mode = Linear, keyable</li>
+<li><strong>Channels</strong>: RG / RB / GB, default RB, keyable</li>
+</ul>
+<hr>
+<h2>Vignette</h2>
+<p><img src="./gifs/vignette.gif" alt="Vignette demo" width="256" height="256"></p>
+<p><em>Darkens the frame towards the corners with a rounded mask you size and soften.</em></p>
+<p>Darkens the frame toward the corners with a rounded mask sized by <strong>Size %</strong> (how much of the frame stays clean), <strong>Softness %</strong> (how wide the fade is) and <strong>Roundness</strong> (100 is a circular falloff, 0 is boxier, based on a superellipse exponent under the hood). <strong>Color</strong> and <strong>Amount</strong> set what darkens the corners and how strongly.</p>
+<p>Because the falloff shape is normalized to the canvas dimensions rather than a fixed circle, this sits correctly on a non-square canvas without turning into a stretched oval, useful for wide banners or tall portrait crops where a naive circular vignette would look off-center.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Size %</strong>: 1 .. 100, default 70, keyable</li>
+<li><strong>Softness %</strong>: 0 .. 100, default 50, keyable</li>
+<li><strong>Roundness</strong>: 0 .. 100, default 100, keyable</li>
+<li><strong>Color</strong>: colour, default #000000, keyable</li>
+<li><strong>Amount</strong>: 0 .. 100, default 100, keyable</li>
+</ul>
+<hr>
+<h2>Scanlines</h2>
+<p><img src="./gifs/scanlines.gif" alt="Scanlines demo" width="256" height="256"></p>
+<p><em>Draws periodic dark lines over the image, with CRT triads and phosphor bleed.</em></p>
+<p>Draws periodic dark lines over the image at <strong>Period (px)</strong> spacing, <strong>Thickness %</strong> of that period staying dark, <strong>Intensity</strong> how much darker, <strong>Phase %</strong> shifting the lines (as a fraction of the period, so animating it scrolls at the same visual speed whatever the period is). <strong>Kind</strong> <strong>CRT</strong> adds an RGB triad along the columns, one phosphor per third of a triad lit at a time, on top of the base line pattern; <strong>Aperture</strong> instead runs the line pattern vertically instead of horizontally. <strong>Bleed (px)</strong> softens the lines along the scan direction only, a smear that stays true to a CRT beam rather than a generic blur.</p>
+<p>This is a straightforward CRT or LCD screen overlay for a UI mockup or a screen-within-a-screen; <strong>Kind</strong> <strong>Lines</strong> alone at low Intensity is often enough, save CRT's triad for when the pixel scale is large enough to actually show it.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Kind</strong>: Lines / CRT / Aperture, default Lines, keyable</li>
+<li><strong>Period (px)</strong>: 2 .. 32, default 4, keyable</li>
+<li><strong>Thickness %</strong>: 0 .. 99, default 50, keyable</li>
+<li><strong>Intensity</strong>: 0 .. 100, default 50, keyable</li>
+<li><strong>Phase %</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Bleed (px)</strong>: 0 .. 8, default 0, keyable</li>
+</ul>
+<hr>
+<h2>Pixel AA</h2>
+<p><img src="./gifs/pixaa.gif" alt="Pixel AA demo" width="256" height="256"></p>
+<p><em>Adds one in-between pixel at each stair step of a curve, never on a straight run.</em></p>
+<p>Adds one half-opacity in-between pixel at a diagonal stair-step corner, but only when the step is no longer than <strong>Max run (px)</strong> pixels on either side, so a long clean diagonal keeps its jagged pixel-art look and only the short, genuinely jaggy corners get touched. <strong>Paint on</strong> <strong>Darker</strong>, <strong>Lighter</strong> or <strong>Both</strong> restricts which side of a step actually gets the new pixel, judged by comparing the two neighboring colors' luminance. <strong>In-between</strong> <strong>Mix</strong> blends the two neighbor colors directly; <strong>Palette</strong> instead snaps that blend to the nearest color in a wired Palette, which keeps the result inside a fixed color count. <strong>Also the outer contour</strong> extends the same treatment to the sprite's outer silhouette edge, which is skipped by default.</p>
+<p>This is the automated version of hand-placed AA pixels artists add along a diagonal edge; run it once at the end rather than by hand on every asset in a set.</p>
+<p><strong>In:</strong> In (image), Mask (image), Palette (palette) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Amount</strong>: 0 .. 100, default 100, keyable</li>
+<li><strong>Max run (px)</strong>: 1 .. 4, default 2, keyable</li>
+<li><strong>Paint on</strong>: Darker / Lighter / Both, default Darker, keyable</li>
+<li><strong>In-between</strong>: Mix / Palette, default Mix, keyable</li>
+<li><strong>Also the outer contour</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Cluster</h2>
+<p><img src="./gifs/cluster.gif" alt="Cluster demo" width="256" height="256"></p>
+<p><em>Merges colour islands smaller than N pixels into their neighbours: clusters, not noise. After a Quantize.</em></p>
+<p>Merges same-color islands into whichever bordering color has the most contact with them. <strong>Mode</strong> <strong>Islands</strong> targets any island smaller than <strong>Min size (px)</strong>; <strong>Specks</strong> instead targets single-pixel islands only, regardless of Min size; <strong>Both</strong> does either. <strong>Passes</strong> repeats the merge, since a sliver that survives one pass, now bordered by a different color than before, can still be small enough to go on the next. <strong>Budget (islands)</strong> is a safety limit: past that many separate color components the entire input comes back untouched, since an image with that many islands is noise rather than clusters and this node is not built to fix that.</p>
+<p>Run this right after a Quantize or a Palette node; dithering and posterizing both leave a scatter of single stray pixels at color boundaries, and one Cluster pass with a small Min size folds them back into flat regions.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Mode</strong>: Islands / Specks / Both, default Islands, keyable</li>
+<li><strong>Min size (px)</strong>: 1 .. 64, default 4, except when mode = Specks, keyable</li>
+<li><strong>Passes</strong>: 1 .. 4, default 1, keyable</li>
+<li><strong>Budget (islands)</strong>: 64 .. 65536, default 4096, keyable</li>
+</ul>
+
+</body>
+</html>

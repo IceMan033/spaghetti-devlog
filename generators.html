@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spaghetti node guide: Generators</title>
+<style>
+  body { max-width: 44rem; margin: 2rem auto; padding: 0 1rem;
+    font: 16px/1.55 system-ui, sans-serif; background: #1b1b1f; color: #e4e4e4; }
+  a { color: #7fb6ff; } code { background: #2a2a30; padding: 0 .25em; }
+  img { image-rendering: pixelated; border: 1px solid #333; }
+  hr { border: 0; border-top: 1px solid #333; margin: 2.5rem 0; }
+</style>
+</head>
+<body>
+<p><a href="index.html">All folders</a></p>
+<h1>Spaghetti node guide: Generators</h1>
+<p>Every graph starts with one of these. A generator takes no image (a few take an image or a curve to steer themselves) and produces the first buffer a filter or a blend will work on: a flat tone, a field of noise, a lattice of stamped shapes, a curve rendered as a stroke. Some paint a whole canvas at once (Noise, Pattern, Gradient); others place discrete instances (Tile, Splatter, Scatter on Path) and answer differently at every pixel depending on which instance reaches it.</p>
+<p>Most generators write RGB only, at full alpha. On the ones with a <strong>Black bg</strong> row, unchecking it turns either a dark reading into transparency or a shape's own border into it, which matters the moment the result feeds Bevel, Normal or Height Blend downstream.</p>
+<hr>
+<h2>Solid</h2>
+<p><img src="./gifs/solid.gif" alt="Solid demo" width="256" height="256"></p>
+<p><em>Fills the whole canvas with one flat color.</em></p>
+<p>The flat fill, one color across the canvas. On its own it is a background swatch; wired into Blend or Paint as the Base, it becomes the tone a mask paints on top of. I use it more as scaffolding while building a graph than in a finished recipe: drop a Solid behind a stack of masks so each one can be judged in isolation before wiring the real texture underneath.</p>
+<p><strong>Color</strong> is the only knob, keyable, so a Solid can carry a color cycle (day to night, a status light) through a whole graph without touching anything downstream. Set its alpha to 0 to get a fully transparent buffer, useful as a base for Layer Stack or Paint when the unmasked areas should stay empty rather than filled.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Color</strong>: colour, default #ffffff, keyable</li>
+</ul>
+<hr>
+<h2>Checker</h2>
+<p><img src="./gifs/checker.gif" alt="Checker demo" width="256" height="256"></p>
+<p><em>Alternates two colors on a board of square cells.</em></p>
+<p>The classic two-tone board. Past the test-pattern use, at a coarse <strong>Size</strong> it doubles as a floor tile base for a Bevel or Normal chain, and at a fine one it is close to a dither.</p>
+<p><strong>Size</strong> sets the cell in pixels; <strong>Size Y</strong> at 0 keeps it square, raised it stretches the cells into bricks-without-offset. <strong>Angle</strong> rotates the whole board around the canvas center, the only way to get a diagonal check without a Transform node afterward. <strong>Soft</strong> turns the hard edge into a falloff a quarter cell wide at 100, so the board reads as a height map rather than a mask, ready for Bevel.</p>
+<p><strong>Offset X/Y</strong> slide the board in pixels rather than percent, which matters if you plan to key them: a Size 8 board keyed from Offset X 0 to 16 loops exactly.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Size</strong>: 1 .. 64, default 8, keyable</li>
+<li><strong>Size Y (0=same)</strong>: 0 .. 64, default 0, keyable</li>
+<li><strong>Angle</strong>: 0 .. 359, default 0, keyable</li>
+<li><strong>Offset X px</strong>: -64 .. 64, default 0, keyable</li>
+<li><strong>Offset Y px</strong>: -64 .. 64, default 0, keyable</li>
+<li><strong>Soft</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Color A</strong>: colour, default #ffffff, keyable</li>
+<li><strong>Color B</strong>: colour, default #000000, keyable</li>
+</ul>
+<hr>
+<h2>Gradient</h2>
+<p><img src="./gifs/gradient.gif" alt="Gradient demo" width="256" height="256"></p>
+<p><em>Paints a linear, radial, angular, diamond or spiral ramp between two colors.</em></p>
+<p>Nine ramps between two colors: the four axis-aligned or angled ones for a sky or a metal sheen, the four centered ones (Radial, Angular, Diamond, Square) for a glow or a vignette, and Spiral for a whirlpool.</p>
+<p><strong>Center X/Y</strong> only apply to the five centered modes; move them to put a glow off to one side rather than dead center. <strong>Ease</strong> reshapes the ramp itself: Smooth softens both ends, Ease In and Ease Out lean the falloff toward one side, useful when a straight Linear reads too mechanical for a light falloff. <strong>Beyond</strong> decides what happens past the two ends: Clamp holds the last color (the default, a vignette), Repeat and Mirror loop it, which is how a single Gradient becomes a striped or chevron field once rotated and offset.</p>
+<p><strong>Offset</strong> is the one to key for a scrolling or pulsing gradient; with <strong>Beyond</strong> set to Repeat it wraps cleanly frame to frame.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Type</strong>: Horizontal / Vertical / Radial / Axial / Axial Reflected / Angular / Diamond / Square / Spiral, default Horizontal, keyable</li>
+<li><strong>Offset</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Angle</strong>: 0 .. 359, default 0, only when kind = Axial / Axial Reflected, keyable</li>
+<li><strong>Center X %</strong>: -100 .. 100, default 0, only when kind = Radial / Angular / Diamond / Square / Spiral, keyable</li>
+<li><strong>Center Y %</strong>: -100 .. 100, default 0, only when kind = Radial / Angular / Diamond / Square / Spiral, keyable</li>
+<li><strong>Turns</strong>: 1 .. 8, default 3, only when kind = Spiral, keyable</li>
+<li><strong>Beyond</strong>: Clamp / Repeat / Mirror, default Clamp, keyable</li>
+<li><strong>Ease</strong>: Linear / Smooth / Ease In / Ease Out, default Linear, keyable</li>
+</ul>
+<hr>
+<h2>Noise</h2>
+<p><img src="./gifs/noise.gif" alt="Noise demo" width="256" height="256"></p>
+<p><em>Generates procedural noise: fractal, cellular, marble, wood or white, with warp and octaves.</em></p>
+<p>Fourteen kinds under one node, grouped by family: smooth lattices (Value, Perlin), the four fractal folds built by stacking octaves (Clouds, Billow, Ridged, Turbulence), two shaped fields that bend a periodic function (Marble, Wood), Plasma, the two Worley cell fields (Cells, Voronoi Edges), and three that are not a lattice at all (White, Sparkle, Blue).</p>
+<p>For the octave kinds, three numbers decide the look: <strong>Octaves</strong> is how many layers, <strong>Lacunarity</strong> how much the frequency jumps between them (200 is the classic doubling), <strong>Gain</strong> how much amplitude survives each jump (50 keeps the usual half; past 70 the result leans toward White). On <strong>Cells</strong>, <strong>Cell output</strong> F2-F1 draws the wall between cells at exactly zero on the bisector, the cell-wall look a lot of stone and dried-mud recipes want; <strong>Cell jitter</strong> at 0 turns the field into a regular grid.</p>
+<p><strong>Warp</strong> bends the sampling coordinate by another noise before reading the primitive; past 50 the underlying lattice stops being readable, and it still tiles because the warp shares the same period. <strong>Seamless tiling</strong> is on by default; turn it off only when a free <strong>Angle</strong> is needed, since a rotated lattice cannot close on itself.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Type</strong>: Value / Perlin / Clouds / Billow / Ridged / Turbulence / Marble / Wood / Plasma / Cells / Voronoi Edges / White / Sparkle / Blue, default Value, keyable</li>
+<li><strong>Flow cells (0=off)</strong>: 0 .. 8, default 0, except when kind = White / Sparkle / Blue, keyable</li>
+<li><strong>Flow %</strong>: 0 .. 100, default 0, except when kind = White / Sparkle / Blue, keyable</li>
+<li><strong>Scale</strong>: 2 .. 64, default 12, keyable</li>
+<li><strong>Scale Y (0=same)</strong>: 0 .. 64, default 0, keyable</li>
+<li><strong>Cell shape</strong>: Euclidean / Manhattan / Chebyshev, default Euclidean, only when kind = Cells / Voronoi Edges, keyable</li>
+<li><strong>Cell output</strong>: F1 / F2 / F2-F1 / F1*F2 / Cell ID / Cell Gray, default F1, only when kind = Cells, keyable</li>
+<li><strong>Cell jitter</strong>: 0 .. 100, default 100, only when kind = Cells, keyable</li>
+<li><strong>Vein distortion</strong>: 0 .. 100, default 50, only when kind = Marble / Wood, keyable</li>
+<li><strong>Density</strong>: 0 .. 100, default 20, only when kind = Sparkle, keyable</li>
+<li><strong>Distort</strong>: 0 .. 100, default 70, only when kind = Plasma, keyable</li>
+<li><strong>Seed</strong>: 1 .. 9999999999, default 1, except when kind = Blue, keyable</li>
+<li><strong>Octaves</strong>: 1 .. 8, default 2, only when kind = Value / Clouds / Billow / Ridged / Turbulence / Marble / Wood / Plasma, keyable</li>
+<li><strong>Lacunarity (whole if tiled)</strong>: 100 .. 400, default 200, only when kind = Value / Clouds / Billow / Ridged / Turbulence / Marble / Wood, keyable</li>
+<li><strong>Gain</strong>: 10 .. 90, default 50, only when kind = Value / Clouds / Billow / Ridged / Turbulence / Marble / Wood, keyable</li>
+<li><strong>Ridge offset</strong>: 0 .. 100, default 100, only when kind = Ridged, keyable</li>
+<li><strong>Warp</strong>: 0 .. 100, default 0, except when kind = White / Sparkle / Blue, keyable</li>
+<li><strong>Warp scale %</strong>: 25 .. 400, default 100, except when kind = White / Sparkle / Blue, keyable</li>
+<li><strong>Warp iterations</strong>: 1 .. 3, default 1, except when kind = White / Sparkle / Blue, keyable</li>
+<li><strong>Invert</strong>: on / off, default off, except when kind = Blue, keyable</li>
+<li><strong>Contrast</strong>: -100 .. 100, default 0, except when kind = Blue, keyable</li>
+<li><strong>Bias</strong>: -100 .. 100, default 0, except when kind = Blue, keyable</li>
+<li><strong>Posterize (0=off)</strong>: 0 .. 16, default 0, except when kind = Blue, keyable</li>
+<li><strong>Seamless tiling</strong>: on / off, default on, except when kind = Blue / Wood, keyable</li>
+<li><strong>Angle</strong>: 0 .. 359, default 0, only when tiling = off; except when kind = White / Sparkle / Blue, keyable</li>
+<li><strong>Angle</strong>: 0 .. 359, default 0, only when kind = Wood, keyable</li>
+<li><strong>Color A</strong>: colour, default #000000, keyable</li>
+<li><strong>Color B</strong>: colour, default #ffffff, keyable</li>
+<li><strong>Black bg</strong>: on / off, default on, keyable</li>
+</ul>
+<hr>
+<h2>Grunge</h2>
+<p><img src="./gifs/grunge.gif" alt="Grunge demo" width="256" height="256"></p>
+<p><em>Dirties with procedural scratches, fibers, drips, rust, dust or cracks.</em></p>
+<p>Procedural wear in eight modes, all sitting on the same lattice Noise uses, so it tiles the same way. Scratches, Fibers and Leaks read as parallel marks; Rust needs two lattices at once (a stretched one for the drip, the plain one for the metal it eats into) so rust only shows where both agree; Cracks and Concrete read the Worley border rather than the cell body.</p>
+<p><strong>Direction</strong> and <strong>Stretch</strong> only apply to the streaky modes (Scratches, Leaks, Rust): Stretch elongates the lattice up to 16 times along that direction, which is what turns a blob field into a scratch. <strong>Density</strong> and <strong>Softness</strong> work everywhere: Density is how much of the canvas the wear covers, Softness widens the edge from a hard cut into a gradient, which matters if the result feeds a Bevel afterward rather than a plain mask.</p>
+<p>I reach for this ahead of hand-painting a worn metal or plaster texture: Rust with Direction Vertical over a Solid, blended Multiply, gets most of the way to a drip without a single pixel painted by hand.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Type</strong>: Scratches / Fibers / Leaks / Rust / Spots / Dust / Cracks / Concrete, default Scratches, keyable</li>
+<li><strong>Direction</strong>: Horizontal / Vertical / Diagonal, default Horizontal, only when kind = Scratches / Leaks / Rust, keyable</li>
+<li><strong>Flow cells (0=off)</strong>: 0 .. 8, default 0, keyable</li>
+<li><strong>Flow %</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Scale</strong>: 2 .. 64, default 12, keyable</li>
+<li><strong>Scale Y (0=same)</strong>: 0 .. 64, default 0, keyable</li>
+<li><strong>Stretch</strong>: 1 .. 16, default 8, only when kind = Scratches / Leaks / Rust, keyable</li>
+<li><strong>Density</strong>: 0 .. 100, default 50, keyable</li>
+<li><strong>Softness</strong>: 0 .. 100, default 20, keyable</li>
+<li><strong>Seed</strong>: 1 .. 9999999999, default 1, keyable</li>
+<li><strong>Invert</strong>: on / off, default off, keyable</li>
+<li><strong>Black bg</strong>: on / off, default on, keyable</li>
+</ul>
+<hr>
+<h2>Caustics</h2>
+<p><img src="./gifs/caustics.gif" alt="Caustics demo" width="256" height="256"></p>
+<p><em>Draws the light mesh of water with warped cell edges.</em></p>
+<p>The light mesh you see through moving water, built from the same Worley cell borders as Noise's Voronoi Edges, but with the lookup itself pushed around by a lower-frequency noise so the cells never read as a straight diagram.</p>
+<p><strong>Layers</strong> stacks up to three independent fields and averages their coverage; two or three is what gives the interference look real caustics have, one is closer to a single Voronoi border. <strong>Distort</strong> is the strength of that domain push; <strong>Sharpness</strong> narrows the bright line at each cell border into a thinner filament as it rises. <strong>Scale Y</strong> at 0 matches Scale; raised, the mesh stretches into streaks, which reads as a current across a pool rather than still water.</p>
+<p><strong>Tint</strong> multiplies the result, so white leaves it a plain grayscale light map and any other color filters it like colored glass. The node always writes fully opaque, so <strong>Black bg</strong> is what turns the dark background transparent if the light needs to composite over something other than black.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Flow cells (0=off)</strong>: 0 .. 8, default 0, keyable</li>
+<li><strong>Flow %</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Scale</strong>: 2 .. 64, default 12, keyable</li>
+<li><strong>Scale Y (0=same)</strong>: 0 .. 64, default 0, keyable</li>
+<li><strong>Layers</strong>: 1 .. 3, default 2, keyable</li>
+<li><strong>Distort</strong>: 0 .. 100, default 30, keyable</li>
+<li><strong>Sharpness</strong>: 1 .. 100, default 40, keyable</li>
+<li><strong>Brightness</strong>: 0 .. 200, default 100, keyable</li>
+<li><strong>Seed</strong>: 1 .. 9999999999, default 1, keyable</li>
+<li><strong>Tint</strong>: colour, default #ffffff, keyable</li>
+<li><strong>Black bg</strong>: on / off, default on, keyable</li>
+</ul>
+<hr>
+<h2>Pattern</h2>
+<p><img src="./gifs/pattern.gif" alt="Pattern demo" width="256" height="256"></p>
+<p><em>Repeats one of twenty-three motifs on a grid: stripes, bricks, scales, hexagons, weaves.</em></p>
+<p>Twenty-three motifs on one lattice engine: stripes and weaves that are periodic fields, and eleven piece motifs (Grid, Bricks, Dots, Diamonds, Hexagons, Triangles, Scales, Polka and others) that share a jitter, a dropout and a rounded-corner falloff because they are all drawn as a signed distance to one shape per cell rather than a hand-written boolean.</p>
+<p><strong>Profile</strong> is the row that changes the most: Flat is the plain boolean every version of this node has drawn, and Linear, Round, Bevel and Gaussian turn the same distance into a height, letting a Pattern feed Bevel or Normal directly for a tiled brick or scale relief instead of staying a flat mask. <strong>Corner %</strong> rounds the piece itself, cheaply, off the same distance. <strong>Jitter lum</strong>, <strong>Jitter size</strong> and <strong>Dropout</strong> read a hash per cell, so a brick wall gets tone variation and the odd missing tile without a second node.</p>
+<p>For brickwork, <strong>Bond</strong> picks real masonry patterns (Running, Stack, Third, Flemish) rather than one fixed half-offset; <strong>Row offset</strong> only matters for the three that are not Stack.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Type</strong>: Stripes / Waves / Chevron / Crosshatch / Grid / Dots / Diamonds / Diamond Tiles / Diamond Plate / Bricks / Herringbone / Scales / Hexagons / Honeycomb / Triangles / Tri Tiles / Polka / Weave / Basketweave / Houndstooth / Rings / Starburst / Fibers / Truchet, default Stripes, keyable</li>
+<li><strong>Tiles X</strong>: 1 .. 32, default 4, except when kind = Diamond Plate / Herringbone / Honeycomb / Polka / Basketweave / Houndstooth, keyable</li>
+<li><strong>Tiles X (even)</strong>: 1 .. 32, default 4, only when kind = Diamond Plate / Herringbone / Honeycomb / Polka / Basketweave / Houndstooth, keyable</li>
+<li><strong>Tiles Y (0=X)</strong>: 0 .. 32, default 0, only when kind = Grid / Bricks / Dots / Diamonds / Diamond Tiles / Hexagons / Triangles / Weave / Chevron / Crosshatch / Diamond Plate / Herringbone / Scales / Honeycomb / Tri Tiles / Polka / Basketweave / Houndstooth / Truchet; except when kind = Diamond Plate / Herringbone / Tri Tiles / Basketweave / Houndstooth, keyable</li>
+<li><strong>Tiles Y (0=X, even)</strong>: 0 .. 32, default 0, only when kind = Diamond Plate / Herringbone / Tri Tiles / Basketweave / Houndstooth, keyable</li>
+<li><strong>Thickness</strong>: 1 .. 99, default 50, keyable</li>
+<li><strong>Gap Y (0=same)</strong>: 0 .. 99, default 0, only when kind = Grid / Bricks / Triangles / Herringbone / Basketweave, keyable</li>
+<li><strong>Bond</strong>: Running / Stack / Third / Flemish, default Running, only when kind = Bricks, keyable</li>
+<li><strong>Row offset</strong>: -100 .. 100, default 50, only when bond = Running / Third / Flemish; only when kind = Bricks, keyable</li>
+<li><strong>Angle</strong>: 0 .. 359, default 0, keyable</li>
+<li><strong>Offset X</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Offset Y</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Offset unit</strong>: Canvas % / Cell %, default Canvas %, keyable</li>
+<li><strong>Part</strong>: All / A / B / Grout, default All, only when kind = Diamond Tiles, keyable</li>
+<li><strong>Corners %</strong>: 0 .. 100, default 0, only when kind = Grid / Bricks / Dots / Diamonds / Diamond Tiles / Triangles / Chevron / Crosshatch / Diamond Plate / Herringbone / Scales / Honeycomb / Tri Tiles / Polka / Basketweave / Houndstooth / Truchet, keyable</li>
+<li><strong>Profile</strong>: Flat / Linear / Round / Bevel / Gaussian, default Flat, only when kind = Grid / Bricks / Dots / Diamonds / Diamond Tiles / Hexagons / Triangles / Chevron / Crosshatch / Diamond Plate / Herringbone / Scales / Honeycomb / Tri Tiles / Polka / Basketweave / Houndstooth / Truchet, keyable</li>
+<li><strong>Bevel width</strong>: 1 .. 50, default 25, only when kind = Grid / Bricks / Dots / Diamonds / Diamond Tiles / Hexagons / Triangles / Chevron / Crosshatch / Diamond Plate / Herringbone / Scales / Honeycomb / Tri Tiles / Polka / Basketweave / Houndstooth / Truchet; only when profile = Bevel, keyable</li>
+<li><strong>Antialias</strong>: on / off, default off, except when kind = Weave, keyable</li>
+<li><strong>Wave</strong>: Square / Sine / Triangle / Saw, default Square, only when kind = Stripes / Waves, keyable</li>
+<li><strong>Amplitude</strong>: 0 .. 100, default 25, only when kind = Waves, keyable</li>
+<li><strong>Frequency</strong>: 1 .. 8, default 2, only when kind = Waves, keyable</li>
+<li><strong>Seed</strong>: 1 .. 9999999999, default 1, keyable</li>
+<li><strong>Jitter lum</strong>: 0 .. 100, default 0, only when kind = Grid / Bricks / Dots / Diamonds / Diamond Tiles / Hexagons / Triangles / Chevron / Crosshatch / Diamond Plate / Herringbone / Scales / Honeycomb / Tri Tiles / Polka / Basketweave / Houndstooth / Truchet, keyable</li>
+<li><strong>Jitter size</strong>: 0 .. 100, default 0, only when kind = Grid / Bricks / Dots / Diamonds / Diamond Tiles / Hexagons / Triangles / Chevron / Crosshatch / Diamond Plate / Herringbone / Scales / Honeycomb / Tri Tiles / Polka / Basketweave / Houndstooth / Truchet, keyable</li>
+<li><strong>Dropout</strong>: 0 .. 100, default 0, only when kind = Grid / Bricks / Dots / Diamonds / Diamond Tiles / Hexagons / Triangles / Chevron / Crosshatch / Diamond Plate / Herringbone / Scales / Honeycomb / Tri Tiles / Polka / Basketweave / Houndstooth / Truchet, keyable</li>
+<li><strong>Color A</strong>: colour, default #ffffff, keyable</li>
+<li><strong>Color B</strong>: colour, default #000000, keyable</li>
+</ul>
+<hr>
+<h2>Shape</h2>
+<p><img src="./gifs/shape.gif" alt="Shape demo" width="256" height="256"></p>
+<p><em>Draws a centered figure -- disc, polygon, star, cross -- with two sizes and a falloff.</em></p>
+<p>One centered figure per node: squares, discs, rings, polygons, stars, a cross, or a soft Gaussian blob. It is the one I reach for most when a recipe needs a single glow, a gem, a UI icon base or a stamp to feed Tile and Splatter's Pattern input.</p>
+<p><strong>Falloff</strong> decides whether this stays a flat cutout or becomes a height: None is the hard edge every version has drawn, Linear/Round/Gaussian turn the same signed distance into a ramp toward the outline, ready for Bevel or a Normal map. <strong>Size</strong> and <strong>Size Y</strong> independently stretch the figure into an ellipse or a stretched cross with no separate Transform. <strong>Star</strong> has two shapes under one name: Classic is the concave four-armed astroid this node has always drawn, Points switches to a real n-pointed star polygon once more or fewer than four points are needed.</p>
+<p><strong>Antialias</strong> only matters at the hard edge (Falloff None); with any other falloff the ramp already supplies its own softness, so leave it off there.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Type</strong>: Square / Rounded / Disc / Ring / Triangle / Diamond / Cross / Star / Polygon / Gaussian, default Disc, keyable</li>
+<li><strong>Size %</strong>: 1 .. 100, default 80, keyable</li>
+<li><strong>Size Y % (0=X)</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Corners %</strong>: 0 .. 100, default 25, only when kind = Rounded, keyable</li>
+<li><strong>Sides</strong>: 3 .. 12, default 6, only when kind = Polygon, keyable</li>
+<li><strong>Inner %</strong>: 0 .. 99, default 60, only when kind = Ring, keyable</li>
+<li><strong>Star</strong>: Classic / Points, default Classic, only when kind = Star, keyable</li>
+<li><strong>Points</strong>: 3 .. 12, default 5, only when kind = Star; only when starMode = Points, keyable</li>
+<li><strong>Angle</strong>: 0 .. 359, default 0, keyable</li>
+<li><strong>Offset X %</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Offset Y %</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Falloff</strong>: None / Linear / Round / Gaussian, default None, keyable</li>
+<li><strong>Antialias</strong>: on / off, default off, keyable</li>
+<li><strong>Color</strong>: colour, default #ffffff, keyable</li>
+<li><strong>Black bg</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Tile</h2>
+<p><img src="./gifs/tile.gif" alt="Tile demo" width="256" height="256"></p>
+<p><em>Stamps a shape or an image on every cell of a square, hex or triangular grid.</em></p>
+<p>The grid sampler that places one instance per cell of a square, hex or triangular lattice and lets every pixel ask which instance covers it, so jittered, rotated or resized instances are never clipped at their own cell boundary.</p>
+<p>Feed it a <strong>Pattern</strong> to stamp your own art per cell instead of a built-in shape, or an <strong>Atlas</strong> sheet with <strong>Atlas cols/rows</strong> to pick a different sprite per instance (<strong>Atlas cell</strong>: Random or Sequence). <strong>Output</strong> repurposes the same field to carry data instead of color: Random Color/Grayscale for variation maps, Index or Position for driving another node downstream, Size for a per-instance mask. <strong>Map input does</strong> reads a wired <strong>Map</strong> at each instance's center to drive its size, cut instances out as a mask, or set rotation from luminance.</p>
+<p><strong>Lattice</strong> Hex and Tri round the tile counts up to an even number to close the seam; on Native <strong>Size mode</strong> the stamp draws at its own pixels times an integer scale, with no resampling and no rotation, the one to use for hand-drawn pixel leaves and grass blades that must not blur.</p>
+<p><strong>In:</strong> Pattern (image), Map (image), Atlas (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Shape</strong>: Square / Rounded / Disc / Ring / Triangle / Diamond / Cross / Star / Polygon / Gaussian, default Square, keyable</li>
+<li><strong>Sides</strong>: 3 .. 12, default 6, only when kind = Polygon, keyable</li>
+<li><strong>Corners %</strong>: 0 .. 100, default 25, only when kind = Rounded, keyable</li>
+<li><strong>Atlas cols</strong>: 1 .. 16, default 4, keyable</li>
+<li><strong>Atlas rows</strong>: 1 .. 16, default 4, keyable</li>
+<li><strong>Atlas cell</strong>: Random / Sequence, default Random, keyable</li>
+<li><strong>Lattice</strong>: Square / Hex / Tri, default Square, keyable</li>
+<li><strong>Tiles X</strong>: 1 .. 16, default 4, except when lattice = Hex / Tri, keyable</li>
+<li><strong>Tiles X (even)</strong>: 1 .. 16, default 4, only when lattice = Hex / Tri, keyable</li>
+<li><strong>Tiles Y (0=X)</strong>: 0 .. 16, default 0, except when lattice = Hex / Tri, keyable</li>
+<li><strong>Tiles Y (0=X, even)</strong>: 0 .. 16, default 0, only when lattice = Hex / Tri, keyable</li>
+<li><strong>Size mode</strong>: Percent / Native, default Percent, keyable</li>
+<li><strong>Size %</strong>: 10 .. 100, default 80, except when sizeMode = Native, keyable</li>
+<li><strong>Size Y % (0=X)</strong>: 0 .. 100, default 0, except when sizeMode = Native, keyable</li>
+<li><strong>Pixel scale (x)</strong>: 1 .. 4, default 1, only when sizeMode = Native, keyable</li>
+<li><strong>Rotation</strong>: 0 .. 359, default 0, except when sizeMode = Native, keyable</li>
+<li><strong>Phase X %</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Phase Y %</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Offset rows</strong>: on / off, default off, keyable</li>
+<li><strong>Offset mode</strong>: Alternate / Progressive, default Alternate, only when offsetAlt = on, keyable</li>
+<li><strong>Offset %</strong>: -100 .. 100, default 50, only when offsetAlt = on, keyable</li>
+<li><strong>Seed</strong>: 1 .. 9999999999, default 1, keyable</li>
+<li><strong>Density %</strong>: 0 .. 100, default 100, keyable</li>
+<li><strong>Jitter pos</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Jitter scale</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Jitter scale Y (0=X)</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Jitter lum</strong>: 0 .. 100, default 0, only when output = Shapes, keyable</li>
+<li><strong>Jitter hue</strong>: 0 .. 100, default 0, only when output = Shapes, keyable</li>
+<li><strong>Jitter sat</strong>: 0 .. 100, default 0, only when output = Shapes, keyable</li>
+<li><strong>Jitter alpha</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Angle RNG</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Random flip</strong>: on / off, default off, keyable</li>
+<li><strong>Map input does</strong>: Size / Mask / Luminance, default Size, keyable</li>
+<li><strong>Output</strong>: Shapes / Random Color / Random Grayscale / Index / Size / Position / Rotation, default Shapes, keyable</li>
+<li><strong>Where they overlap</strong>: Nearest / Max / Add / Over, default Nearest, keyable</li>
+<li><strong>Color</strong>: colour, default #ffffff, keyable</li>
+<li><strong>Black bg</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Arc Pavement</h2>
+<p><img src="./gifs/arcpavement.gif" alt="Arc Pavement demo" width="256" height="256"></p>
+<p><em>Paves the canvas with fans of cobblestones separated by mortar.</em></p>
+<p>Cobblestone paving in radial fans, cut into rings and wedge-shaped cobbles rather than the square cells every other pattern here uses. Each fan sits in one cell of a <strong>Fans X/Y</strong> grid; <strong>Stagger rows/rings</strong> offsets alternating fans and rings by half a cobble so the mortar joints never line up into straight seams, the difference between a paved plaza and a tiled floor.</p>
+<p><strong>Rings</strong> and <strong>Cobbles/ring</strong> set the density of the cut; <strong>Fan span</strong> narrows the wedge from a full half-circle (180, the default) down to a slice, useful for a corner or a path rather than an open floor. <strong>Thickness</strong> is the mortar width as a percent of the cobble.</p>
+<p><strong>Jitter lum</strong> and <strong>Jitter hue</strong> vary each cobble's tone off <strong>Cobble</strong>, off a per-piece hash, the same way Pattern's brick jitter does; push lum jitter to 30-40 for real stone before reaching for a separate Grunge pass on top. <strong>Angle</strong> rotates the whole paving, which also rotates every fan's own span.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Fans X</strong>: 1 .. 16, default 3, keyable</li>
+<li><strong>Fans Y (0=X)</strong>: 0 .. 16, default 0, keyable</li>
+<li><strong>Rings</strong>: 1 .. 8, default 3, keyable</li>
+<li><strong>Cobbles/ring</strong>: 2 .. 16, default 5, keyable</li>
+<li><strong>Fan span</strong>: 30 .. 360, default 180, keyable</li>
+<li><strong>Thickness</strong>: 1 .. 50, default 12, keyable</li>
+<li><strong>Corners %</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Stagger rows/rings</strong>: on / off, default on, keyable</li>
+<li><strong>Jitter lum</strong>: 0 .. 100, default 20, keyable</li>
+<li><strong>Jitter hue</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Seed</strong>: 1 .. 9999999999, default 1, keyable</li>
+<li><strong>Angle</strong>: 0 .. 359, default 180, keyable</li>
+<li><strong>Cobble</strong>: colour, default #ffffff, keyable</li>
+<li><strong>Mortar</strong>: colour, default #000000, keyable</li>
+</ul>
+<hr>
+<h2>Splatter</h2>
+<p><img src="./gifs/splatter.gif" alt="Splatter demo" width="256" height="256"></p>
+<p><em>Scatters stamps at random over the canvas, with count, size, spacing and jitter.</em></p>
+<p>Scatters a <strong>Count</strong> of stamps at random rather than one per cell, so it reads as thrown debris, foliage or blood rather than a grid. Feed a <strong>Pattern</strong> for your own stamp, or an <strong>Atlas</strong> sheet to vary which sprite lands where.</p>
+<p><strong>Min gap %</strong> turns on dart-throwing: each instance tries up to eight hashed positions and is dropped outright if none of them clears the distance from every instance already placed. That is a real limit, not a slider you can push freely: past a certain gap for a given <strong>Count</strong>, more instances fail to place outright and the field thins out rather than spacing out further, so raise <strong>Count</strong> alongside <strong>Min gap %</strong> if the result looks sparser than expected.</p>
+<p><strong>Point at</strong> Radial aims every stamp away from canvas center (spikes, thorns); Map angle reads the red channel of a wired <strong>Map</strong> instead, for combing scattered instances along a flow. <strong>Output</strong> Position/Rotation/Size write per-instance data instead of color, the same vocabulary Tile uses, so a Splatter and a Tile downstream of the same Formula read consistently.</p>
+<p><strong>In:</strong> Pattern (image), Atlas (image), Map (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Shape</strong>: Square / Rounded / Disc / Ring / Triangle / Diamond / Cross / Star / Polygon / Gaussian, default Disc, keyable</li>
+<li><strong>Sides</strong>: 3 .. 12, default 6, only when kind = Polygon, keyable</li>
+<li><strong>Corners %</strong>: 0 .. 100, default 25, only when kind = Rounded, keyable</li>
+<li><strong>Atlas cols</strong>: 1 .. 16, default 4, keyable</li>
+<li><strong>Atlas rows</strong>: 1 .. 16, default 4, keyable</li>
+<li><strong>Atlas cell</strong>: Random / Sequence, default Random, keyable</li>
+<li><strong>Output</strong>: Shapes / Random Color / Random Grayscale / Index / Size / Position / Rotation, default Shapes, keyable</li>
+<li><strong>Count</strong>: 1 .. 200, default 24, keyable</li>
+<li><strong>Size mode</strong>: Percent / Native, default Percent, keyable</li>
+<li><strong>Size %</strong>: 1 .. 100, default 15, except when sizeMode = Native, keyable</li>
+<li><strong>Size Y % (0=X)</strong>: 0 .. 100, default 0, except when sizeMode = Native, keyable</li>
+<li><strong>Pixel scale (x)</strong>: 1 .. 4, default 1, only when sizeMode = Native, keyable</li>
+<li><strong>Flip</strong>: None / X / Y / XY / Random, default None, keyable</li>
+<li><strong>Min gap % (0=off)</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Point at</strong>: None / Radial / Map angle, default None, keyable</li>
+<li><strong>Seed</strong>: 1 .. 9999999999, default 1, keyable</li>
+<li><strong>Jitter scale</strong>: 0 .. 100, default 40, keyable</li>
+<li><strong>Jitter scale Y (0=X)</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Jitter lum</strong>: 0 .. 100, default 0, only when output = Shapes, keyable</li>
+<li><strong>Jitter hue</strong>: 0 .. 100, default 0, only when output = Shapes, keyable</li>
+<li><strong>Angle RNG</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Color</strong>: colour, default #ffffff, keyable</li>
+<li><strong>Black bg</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Tile Variants</h2>
+<p><img src="./gifs/tilevariants.gif" alt="Tile Variants demo" width="256" height="256"></p>
+<p><em>Fills a grid with variants of a Custom definition, one seed per cell.</em></p>
+<p>Renders a grid of variants of a stored <strong>Custom</strong> node definition, one hashed value per cell rather than one render repeated. Point <strong>Custom node</strong> at a definition with an exposed parameter (typically a seed) and this node evaluates it once per cell of the <strong>Tiles X/Y</strong> grid, each time with that parameter rolled to a different value.</p>
+<p><strong>Vary</strong> picks which exposed entry gets rolled: All seeds walks every exposed seed at once, the one to use for a tileset of, say, six near-identical rocks; naming one entry targets only that knob and leaves the rest of the definition fixed across the grid. <strong>Range low/high %</strong> clamps how far the roll can wander from the definition's own default, so a family of grass tufts stays a family rather than drifting into unrelated shapes at the edges.</p>
+<p><strong>Seam blend %</strong> renders every cell oversized by an overlap band and crossfades neighbors across it, so the grid keeps tiling even though every cell is a different variant. Because it has no input and reads no keyframes, the preview is always a still grid, not a demo sweep.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Custom node</strong>: list, default (empty)</li>
+<li><strong>Vary</strong>: list, default All seeds</li>
+<li><strong>Tiles X</strong>: 1 .. 32, default 4, keyable</li>
+<li><strong>Tiles Y (0=X)</strong>: 0 .. 32, default 0, keyable</li>
+<li><strong>Seed</strong>: 1 .. 9999999999, default 1, keyable</li>
+<li><strong>Range low %</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Range high %</strong>: 0 .. 100, default 100, keyable</li>
+<li><strong>Seam blend %</strong>: 0 .. 25, default 10, keyable</li>
+<li><strong>Black bg</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Text</h2>
+<p><img src="./gifs/text.gif" alt="Text demo" width="256" height="256"></p>
+<p><em>Writes text with the bitmap font, with scale and anchoring.</em></p>
+<p>Bitmap text in the engine's own font, for labels, UI mockups or a pixel-perfect logo baked into a texture rather than typed live in Aseprite. <strong>Scale</strong> is an integer multiplier on the font's own pixels, so text stays crisp at any size rather than being resampled.</p>
+<p><strong>Anchor</strong> Fit is the odd one out: it keeps a multi-line block left-aligned as a paragraph while <strong>Pos X</strong> slides the whole block between flush-left and flush-right; Left/Center/Right instead pin a literal point of the block to <strong>Pos X</strong>, line by line, which is what you want for a single centered word rather than a paragraph. <strong>Spacing</strong> adds or removes pixels between glyphs, negative values included, for a tighter or wider set of letters at small sizes.</p>
+<p><strong>Wrap around</strong> makes the text sample the canvas cyclically instead of clipping at the edge, which only matters if a line is wider than the canvas. Type a literal <code>\n</code> in the single-line field to force a line break where the dialog gives no multi-line entry.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Scale</strong>: 1 .. 8, default 2, keyable</li>
+<li><strong>Anchor</strong>: Fit / Left / Center / Right, default Fit, keyable</li>
+<li><strong>Pos X</strong>: 0 .. 100, default 50, keyable</li>
+<li><strong>Pos Y</strong>: 0 .. 100, default 50, keyable</li>
+<li><strong>Spacing</strong>: -2 .. 8, default 0, keyable</li>
+<li><strong>Wrap around</strong>: on / off, default off, keyable</li>
+<li><strong>Color</strong>: colour, default #ffffff, keyable</li>
+<li><strong>Black bg</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Import Image</h2>
+<p><img src="./gifs/image.gif" alt="Import Image demo" width="256" height="256"></p>
+<p><em>Loads an image file from disk and fits it to the canvas.</em></p>
+<p>Loads a file from disk and fits it to the canvas, which is how an external reference, a hand-painted piece, or a photo source enters a graph that is otherwise all procedural. <strong>Fit</strong> Stretch resamples to the canvas size, Center places it at 1:1 pixels in the middle (cropped if larger), Tile repeats it at 1:1 with no resampling, the one to use for a hand-authored tiling swatch you do not want the engine to touch.</p>
+<p><strong>Scale %</strong> applies before the fit, so at Tile it changes how many repeats fit across the canvas, and at Stretch or Center it is a plain zoom. With no file loaded, or a bridge that cannot read one (Studio without that host feature wired), the node returns transparent rather than an error, so a broken path fails quietly rather than breaking the whole render.</p>
+<p>I use this to bring in a base photograph for Color Match or a hand-drawn silhouette to feed Bevel, less often as a finished texture on its own.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Fit</strong>: Stretch / Tile / Center, default Stretch, keyable</li>
+<li><strong>Scale %</strong>: 10 .. 800, default 100, keyable</li>
+</ul>
+<hr>
+<h2>Subdivide</h2>
+<p><img src="./gifs/subdivide.gif" alt="Subdivide demo" width="256" height="256"></p>
+<p><em>Splits the canvas into ever smaller boxes and fills each leaf.</em></p>
+<p>A quad-tree or a binary split of the canvas into ever-smaller leaf boxes, each one filled on its own: the fractured-flagstone or plank-floor generator. <strong>Split</strong> Quad cuts each box into four at every level (flagstones, cracked ice); Binary cuts only the box's longer side in two (planks, a strip-wood floor), the difference between a random rectangle carve and a random grid stagger.</p>
+<p><strong>Split chance %</strong> is rolled per box past the root, so a lower value stops the recursion early in places and leaves larger leaves mixed with small ones; <strong>Cut jitter %</strong> moves where a cut falls within a box rather than always down its middle. <strong>Aspect limit</strong> rejects a cut whose children would come out too elongated, which is what keeps Binary from producing slivers at high jitter; leave it at 1 (off) if slivers are exactly what you want.</p>
+<p><strong>Fill</strong> Pattern tiles a wired image into each leaf at its own aspect (<strong>Turn leaves 90</strong> rotates alternating leaves for a herringbone plank look); Depth and Size are grayscale reads of the tree structure itself, useful as a mask rather than a final look.</p>
+<p><strong>In:</strong> Pattern (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Split</strong>: Quad / Binary, default Quad, keyable</li>
+<li><strong>Levels</strong>: 1 .. 6, default 3, keyable</li>
+<li><strong>Split chance %</strong>: 0 .. 100, default 70, keyable</li>
+<li><strong>Cut jitter %</strong>: 0 .. 100, default 40, keyable</li>
+<li><strong>Aspect limit (1=off)</strong>: 1 .. 8, default 1, keyable</li>
+<li><strong>Gap px</strong>: 0 .. 16, default 1, keyable</li>
+<li><strong>Corners %</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Profile</strong>: Flat / Linear / Round / Bevel / Gaussian, default Flat, keyable</li>
+<li><strong>Bevel width</strong>: 1 .. 50, default 25, only when profile = Bevel, keyable</li>
+<li><strong>Fill</strong>: Random Gray / Random Color / Index / Depth / Size / Pattern, default Random Gray, keyable</li>
+<li><strong>Turn leaves 90</strong>: on / off, default off, only when fill = Pattern, keyable</li>
+<li><strong>Seed</strong>: 1 .. 9999999999, default 1, keyable</li>
+</ul>
+<hr>
+<h2>SDF Shape</h2>
+<p><img src="./gifs/sdfshape.gif" alt="SDF Shape demo" width="256" height="256"></p>
+<p><em>Draws nine primitives by distance, then rounds, repeats, shells and combines them.</em></p>
+<p>Nine primitives drawn by signed distance rather than by a fixed boolean shape, which is what lets <strong>Round %</strong>, <strong>Repeat X/Y</strong>, <strong>Shell px</strong> and the boolean <strong>With B</strong> operations all work off the same number. It is the node to reach for when Shape's nine figures are not enough, particularly for a Segment, a Capsule or a Cross with an exact pixel <strong>Line px</strong> width.</p>
+<p><strong>With B</strong> combines this shape with a second SDF Shape wired into the <strong>B</strong> input: Union, Subtract and Intersect are the hard booleans; the three Smooth variants round the seam by <strong>Smooth %</strong>, the way to blend two circles into a rounded blob rather than a sharp figure-eight. <strong>Repeat X/Y</strong> tiles the primitive across the canvas at an even division, so a single Ring repeated 4x4 is a dot grid with rounded corners for free. <strong>Shell px</strong> turns any shape, combined or not, into an outline of twice its pixel value in width.</p>
+<p><strong>Output</strong> Distance is a grayscale field centered on mid-gray at the edge, the form the <strong>B</strong> input and <strong>With B</strong> both expect; Mask is a hard cutout, for when this is the last node before a Paint or a Blend rather than another SDF Shape.</p>
+<p><strong>In:</strong> B (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Shape</strong>: Circle / Box / Segment / Ring / Polygon / Star / Capsule / Cross / Triangle, default Circle, keyable</li>
+<li><strong>Size %</strong>: 1 .. 100, default 50, keyable</li>
+<li><strong>Size Y % (0=X)</strong>: 0 .. 100, default 0, only when shape = Circle / Box / Ring / Polygon / Star / Capsule / Cross / Triangle, keyable</li>
+<li><strong>Round %</strong>: 0 .. 100, default 0, only when shape = Box / Polygon / Star / Cross / Triangle, keyable</li>
+<li><strong>Line px</strong>: 1 .. 64, default 4, only when shape = Segment / Ring / Cross, keyable</li>
+<li><strong>Sides</strong>: 3 .. 12, default 6, only when shape = Polygon / Star, keyable</li>
+<li><strong>Waist %</strong>: 5 .. 95, default 45, only when shape = Star, keyable</li>
+<li><strong>Angle</strong>: 0 .. 359, default 0, keyable</li>
+<li><strong>Offset X %</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Offset Y %</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Repeat X (0=off)</strong>: 0 .. 16, default 0, keyable</li>
+<li><strong>Repeat Y (0=off)</strong>: 0 .. 16, default 0, keyable</li>
+<li><strong>With B</strong>: None / Union / Subtract / Intersect / Smooth union / Smooth subtract / Smooth intersect, default None, keyable</li>
+<li><strong>Smooth %</strong>: 0 .. 100, default 25, only when op = Smooth union / Smooth subtract / Smooth intersect, keyable</li>
+<li><strong>Shell px (0=off)</strong>: 0 .. 64, default 0, keyable</li>
+<li><strong>Range px</strong>: 1 .. 64, default 8, keyable</li>
+<li><strong>Output</strong>: Distance / Mask, default Distance, keyable</li>
+</ul>
+<hr>
+<h2>Path Source</h2>
+<p><img src="./gifs/pathsource.gif" alt="Path Source demo" width="256" height="256"></p>
+<p><em>Puts a curve on the wire so several nodes share one stroke.</em></p>
+<p>A curve with no picture of its own: it exists purely so several nodes downstream (Path, Scatter on Path) can share exactly one stroke instead of each holding its own duplicate set of points. Wire its output into more than one consumer and editing the shape once moves all of them together.</p>
+<p><strong>Closed</strong> joins the last point back to the first, turning an open line into a loop, which matters for anything that reads the curve's length (Scatter on Path's spacing, Path's taper). <strong>Smooth</strong> runs a Catmull-Rom pass through the control points instead of drawing straight segments between them, on by default; turn it off for a deliberately angular path (a lightning bolt, a crack) rather than a flowing one.</p>
+<p>I add one of these the moment a recipe needs the same river or crack in two places, a stroke and a scatter of pebbles along it, rather than two separate paths that would drift apart the first time either one is nudged.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> path</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Closed</strong>: on / off, default off, keyable</li>
+<li><strong>Smooth (Catmull-Rom)</strong>: on / off, default on, keyable</li>
+</ul>
+<hr>
+<h2>Path</h2>
+<p><img src="./gifs/path.gif" alt="Path demo" width="256" height="256"></p>
+<p><em>Draws the curve you lay out: line, fill, distance travelled or normals.</em></p>
+<p>Renders the curve itself: a stroke (<strong>Output</strong> Render), a filled interior (Fill), the distance travelled along it as a grayscale ramp (Gradient), or its tangent as a normal map (Normal), all off the same set of control points or a curve taken from a wired <strong>Curve</strong> input.</p>
+<p><strong>Taper %</strong> thins the stroke toward its far end, the one knob that turns a uniform line into a vine, a crack or a whip rather than a length of pipe; it reads distance along the path, so a <strong>Closed</strong> loop has no far end for it to thin toward. <strong>Thickness px</strong> is the stroke width in pixels; odd values center it exactly the way a pixel artist expects.</p>
+<p>Gradient and Normal outputs are built for feeding something else rather than looking at directly: Gradient into a Curve node lets you re-shape the falloff along a river's length, Normal straight into a Light node lights the stroke as if it had real relief. <strong>Wrap around</strong> matters only if the path runs off one edge of the canvas and should reappear at the other.</p>
+<p><strong>In:</strong> Curve (path) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Closed</strong>: on / off, default off, keyable</li>
+<li><strong>Smooth (Catmull-Rom)</strong>: on / off, default on, keyable</li>
+<li><strong>Taper %</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Thickness px</strong>: 1 .. 64, default 4, keyable</li>
+<li><strong>Output</strong>: Render / Fill / Gradient / Normal, default Render, keyable</li>
+<li><strong>Colour</strong>: colour, default #ffffff, only when output = Render / Fill, keyable</li>
+<li><strong>Wrap around</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Scatter on Path</h2>
+<p><img src="./gifs/scatterpath.gif" alt="Scatter on Path demo" width="256" height="256"></p>
+<p><em>Sows stamps along the curve, aligned to its tangent.</em></p>
+<p>Sows stamps along a curve at a fixed pixel spacing, each one turned to match the curve's own direction: footprints, rivets along a seam, beads on a string, pebbles down a dry riverbed. Takes the same curve a Path Source carries, or its own points if nothing is wired.</p>
+<p><strong>Spacing px</strong> is measured along the path, not across the canvas, so it stays consistent whether the curve is short and tight or long and sprawling. <strong>Align to path</strong> rotates every stamp to the local tangent; turn it off for round stamps where rotation would not show anyway, or for stamps you want kept upright regardless of the curve's turns. <strong>Start %/End %</strong> trims which portion of the curve gets stamps, for a partial trail rather than the whole length.</p>
+<p><strong>Taper %</strong> shrinks the stamp size toward the far end the same way it thins a Path's stroke; combine it with <strong>Jitter scale</strong> for pebbles that get both smaller and more irregular as the trail fades out. With no <strong>Pattern</strong> and no <strong>Atlas</strong> wired, the shape falls back to a plain <strong>Shape (no stamp)</strong> disc or square in <strong>Colour</strong>.</p>
+<p><strong>In:</strong> Pattern (image), Atlas (image), Curve (path) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Closed</strong>: on / off, default off, keyable</li>
+<li><strong>Smooth (Catmull-Rom)</strong>: on / off, default on, keyable</li>
+<li><strong>Taper %</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Spacing px</strong>: 2 .. 64, default 12, keyable</li>
+<li><strong>Size %</strong>: 1 .. 100, default 20, keyable</li>
+<li><strong>Align to path</strong>: on / off, default on, keyable</li>
+<li><strong>Start %</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>End %</strong>: 0 .. 100, default 100, keyable</li>
+<li><strong>Jitter pos</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Jitter scale</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Jitter lum</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Seed</strong>: 1 .. 9999999999, default 1, keyable</li>
+<li><strong>Shape (no stamp)</strong>: Disc / Square, default Disc, keyable</li>
+<li><strong>Colour</strong>: colour, default #ffffff, keyable</li>
+<li><strong>Atlas cols</strong>: 1 .. 16, default 4, keyable</li>
+<li><strong>Atlas rows</strong>: 1 .. 16, default 4, keyable</li>
+<li><strong>Atlas cell</strong>: Random / Sequence, default Random, keyable</li>
+<li><strong>Wrap around</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Reaction Diffusion</h2>
+<p><img src="./gifs/reactiondiffusion.gif" alt="Reaction Diffusion demo" width="256" height="256"></p>
+<p><em>Grows blotches and mazes with the Gray-Scott chemical reaction.</em></p>
+<p>Grows organic blotches and mazes with the Gray-Scott reaction, the same chemistry behind animal coat patterns: a low <strong>Feed</strong> and a <strong>Kill</strong> near 55-60 tends toward isolated spots, a <strong>Feed</strong> and <strong>Kill</strong> both nearer the middle of their range grows connected mazes and worms instead. There is no formula to read off the two sliders in advance; sweeping them a recipe at a time is how you find the pattern you want.</p>
+<p><strong>Steps</strong> is literally how long the simulation runs before the node reads out the result: low values catch it early, as small separate blobs just starting to spread, high values let them meet, merge and fill most of the canvas. It is not cheap per step, so keep it near the low end while iterating on <strong>Feed</strong>/<strong>Kill</strong> and only raise it once those two are set.</p>
+<p>Wire a bright shape into <strong>Seed</strong> to start the growth from that silhouette instead of the node's own scattered default blobs, useful for growing veins or roots outward from a fixed trunk rather than from nowhere.</p>
+<p><strong>In:</strong> Seed (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Steps</strong>: 10 .. 200, default 25, keyable</li>
+<li><strong>Feed</strong>: 0 .. 100, default 40, keyable</li>
+<li><strong>Kill</strong>: 0 .. 100, default 50, keyable</li>
+<li><strong>Seed</strong>: 1 .. 9999999999, default 1, keyable</li>
+</ul>
+<hr>
+<h2>Atlas</h2>
+<p><img src="./gifs/atlas.gif" alt="Atlas demo" width="256" height="256"></p>
+<p><em>Crops one cell from a sheet split into columns and rows.</em></p>
+<p>Crops one cell out of a sprite sheet split into <strong>Cols</strong> x <strong>Rows</strong>, or the whole sheet when <strong>Cell</strong> is 0. It is the plain, host-independent way to pull a single frame or tile out of a sheet that was not authored as an Aseprite tileset.</p>
+<p><strong>Cell</strong> is 1-based and wraps at the sheet's own cell count, so animating it across more than <strong>Cols</strong> x <strong>Rows</strong> loops rather than reading garbage. <strong>Fit</strong> decides what happens if the cropped cell does not match this node's own canvas size: Stretch resamples it, Center places it at 1:1 and crops or pads, Tile repeats it at 1:1, the one to use when a cell is meant to be smaller than the working canvas and repeated rather than blown up.</p>
+<p>I reach for this ahead of Splatter or Tile's own <strong>Atlas</strong> input whenever I need to preview or process one specific cell on its own rather than scatter the whole sheet.</p>
+<p><strong>In:</strong> Image (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Cols</strong>: 1 .. 64, default 4, keyable</li>
+<li><strong>Rows</strong>: 1 .. 64, default 4, keyable</li>
+<li><strong>Cell (0=all)</strong>: 0 .. 256, default 0, keyable</li>
+<li><strong>Fit</strong>: Stretch / Tile / Center, default Stretch, keyable</li>
+</ul>
+<hr>
+<h2>Grid</h2>
+<p><img src="./gifs/grid.gif" alt="Grid demo" width="256" height="256"></p>
+<p><em>Draws grid lines, either the sprite's or the ones you type.</em></p>
+<p>Draws grid lines at the sprite's own cell size by default, or a typed <strong>Cell W/H</strong> in pixels. Past the obvious use as an onion-skin or a tile-boundary overlay, with <strong>Gap px</strong> and a <strong>Profile</strong> other than Flat it becomes a beveled line, ready to feed Bevel or Normal for a real inset grout line instead of a flat overlay color.</p>
+<p><strong>Line px</strong> is the line's own width in pixels, capped the same way at every pixel scale so a render at 2x does not draw a line twice as thick as the same graph at 1x. <strong>Gap px</strong> adds a border of empty space around the line before the cell body starts, which is what a <strong>Profile</strong> ramps down into. <strong>Corner %</strong> rounds where lines cross, off the same distance the Pattern family uses.</p>
+<p>With <strong>Gap px</strong> 0 and <strong>Profile</strong> Flat, the clamps and defaults reproduce the plain grid overlay this node has always drawn, no more expensive than a boolean test per pixel.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Cell W (0=sprite)</strong>: 0 .. 128, default 0, keyable</li>
+<li><strong>Cell H (0=sprite)</strong>: 0 .. 128, default 0, keyable</li>
+<li><strong>Line px</strong>: 1 .. 16, default 1, keyable</li>
+<li><strong>Gap px</strong>: 0 .. 64, default 0, keyable</li>
+<li><strong>Corners %</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Profile</strong>: Flat / Linear / Round / Bevel / Gaussian, default Flat, keyable</li>
+<li><strong>Offset X px</strong>: -64 .. 64, default 0, keyable</li>
+<li><strong>Offset Y px</strong>: -64 .. 64, default 0, keyable</li>
+<li><strong>Colour</strong>: colour, default #ffffff, keyable</li>
+</ul>
+<hr>
+<h2>Pixel Cracks</h2>
+<p><img src="./gifs/pixcracks.gif" alt="Pixel Cracks demo" width="256" height="256"></p>
+<p><em>One-pixel cracks that wander and branch, for slate, marble, ice and old wood.</em></p>
+<p>One-pixel cracks that wander and branch across the canvas without ever touching another crack or themselves, for slate, dry mud, marble veining or old plaster. Each crack is walked pixel by pixel with a small random turn at every step; a step that would land next to an already-lit pixel (other than the one just placed) is refused and the whole unfinished run is erased rather than left as a stub.</p>
+<p><strong>Wander</strong> is how hard that turn pulls per step: near 0 draws straight hairline cracks, high values curl them tightly. <strong>Branch %</strong> and <strong>Branch depth</strong> let a crack split as it grows, with depth capping how many generations of branch a single crack can spawn. <strong>Direction</strong> and <strong>Spread</strong> aim the whole set of cracks (spread 180, the default, lets them start in any direction; a narrow spread lines them up, useful for a wood-grain crack pattern).</p>
+<p><strong>Tiling</strong> wraps the walk at the canvas edge so cracks that reach one side continue from the other; with it off, the edge itself acts as a wall the crack cannot cross.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Cracks</strong>: 0 .. 64, default 12, keyable</li>
+<li><strong>Length (px)</strong>: 4 .. 128, default 24, keyable</li>
+<li><strong>Wander</strong>: 0 .. 100, default 40, keyable</li>
+<li><strong>Branch %</strong>: 0 .. 100, default 15, keyable</li>
+<li><strong>Branch depth</strong>: 0 .. 3, default 1, keyable</li>
+<li><strong>Direction</strong>: 0 .. 359, default 0, keyable</li>
+<li><strong>Spread (180 = any)</strong>: 0 .. 180, default 180, keyable</li>
+<li><strong>Thickness (px)</strong>: 1 .. 2, default 1, keyable</li>
+<li><strong>Seed</strong>: 1 .. 9999999999, default 1, keyable</li>
+<li><strong>Color</strong>: colour, default #ffffff, keyable</li>
+<li><strong>Tiling</strong>: on / off, default on, keyable</li>
+<li><strong>Black bg</strong>: on / off, default off, keyable</li>
+</ul>
+
+</body>
+</html>

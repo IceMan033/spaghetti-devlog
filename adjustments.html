@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spaghetti node guide: Adjustments</title>
+<style>
+  body { max-width: 44rem; margin: 2rem auto; padding: 0 1rem;
+    font: 16px/1.55 system-ui, sans-serif; background: #1b1b1f; color: #e4e4e4; }
+  a { color: #7fb6ff; } code { background: #2a2a30; padding: 0 .25em; }
+  img { image-rendering: pixelated; border: 1px solid #333; }
+  hr { border: 0; border-top: 1px solid #333; margin: 2.5rem 0; }
+</style>
+</head>
+<body>
+<p><a href="index.html">All folders</a></p>
+<h1>Spaghetti node guide: Adjustments</h1>
+<p>Adjustments are the flat filters: every one of them reads a pixel and writes a pixel back in the same place, no pushing, no blurring. That covers tone (Levels, Curve, Auto Levels, Clamp, Contrast, Histogram), color (HSL, Grayscale, Gradient Map, Color Swap, Color To Mask, Color Match), and the group that throws information away on purpose (Threshold, Quantize, Dither, Channel Mixer, Invert, Highpass).</p>
+<p>Most of these sit late in a graph, right before an Output, tightening what a Noise or a Pattern generated into something with real pixel-art contrast. A lot of them take an optional Mask input too: wire one in and the effect only lands where the mask is bright, with an Invert mask checkbox to flip that reading. I reach for Levels and Quantize the most; the rest earn their slot once you need to match a reference palette or fix a specific color.</p>
+<hr>
+<h2>Invert</h2>
+<p><img src="./gifs/invert.gif" alt="Invert demo" width="256" height="256"></p>
+<p><em>Flips every color channel: what was white turns black.</em></p>
+<p>Flips red, green and blue; alpha is left alone. There is nothing to configure, which is the point: it is a one-click negative you drop in to sanity-check a mask (does the bright side match what I expect) or to turn a &quot;distance from edge&quot; map into a &quot;distance from center&quot; one without touching Levels.</p>
+<p>Plug it straight after a Threshold or a Distance node when the black/white sides came out backwards, instead of hunting for an Invert checkbox on the upstream node (not every node has one). Wire a Mask into it and only the masked area gets negated, which is a quick way to invert one color region of a sprite while leaving the rest alone.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<hr>
+<h2>Levels</h2>
+<p><img src="./gifs/levels.gif" alt="Levels demo" width="256" height="256"></p>
+<p><em>Remaps the tonal range by black point, white point and gamma.</em></p>
+<p>The classic three-point remap: <strong>In black</strong> and <strong>In white</strong> set where the input curve starts and ends, <strong>Gamma %</strong> bends the middle of that range. Above 100 lifts the midtones, below 100 sinks them; 100 is the identity. <strong>Out black</strong> and <strong>Out white</strong> then remap the 0..1 result onto a narrower (or inverted, if you set out white below out black) output range, which is how you turn a Quantize's flat {0, 128, 255} into a three-tone {80, 128, 176} ramp without a separate Multiply and Add.</p>
+<p>I set <strong>In black</strong> to 20 and <strong>In white</strong> to 235 on most rendered noise before it goes anywhere else: it is a cheap contrast punch that costs nothing at pixel scale. <strong>Invert mask</strong> flips which side of a wired Mask gets the adjustment.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>In black</strong>: 0 .. 254, default 0, keyable</li>
+<li><strong>In white</strong>: 1 .. 255, default 255, keyable</li>
+<li><strong>Gamma %</strong>: 10 .. 300, default 100, keyable</li>
+<li><strong>Out black</strong>: 0 .. 255, default 0, keyable</li>
+<li><strong>Out white</strong>: 0 .. 255, default 255, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Auto Levels</h2>
+<p><img src="./gifs/autolevels.gif" alt="Auto Levels demo" width="256" height="256"></p>
+<p><em>Stretches the histogram from black to white, clipping a percentage at each end.</em></p>
+<p>Finds whatever range of luminance (or, with <strong>Per channel</strong> on, each channel separately) the input actually uses, ignoring near-transparent pixels, and stretches it to the full 0..255. <strong>Clip %</strong> throws away that percentage off each end first, so a couple of outlier pixels cannot stop the rest of the image from stretching.</p>
+<p>Useful as the first node after a generator whose output range you do not want to guess by hand: a Reaction Diffusion or a stacked Noise often comes out sitting in the middle third of the tonal range, and one Auto Levels at Clip % 0 gives you full contrast back. <strong>Per channel</strong> on fixes a color cast (a Noise that reads slightly warm) instead of only normalizing brightness. On a flat input with no range to stretch, the node quietly does nothing rather than dividing by zero.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Clip %</strong>: 0 .. 49, default 0, keyable</li>
+<li><strong>Per channel</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Curve</h2>
+<p><img src="./gifs/curve.gif" alt="Curve demo" width="256" height="256"></p>
+<p><em>Remaps tones with a point graph you draw yourself.</em></p>
+<p>A freeform tonal remap: you draw the curve directly on the node instead of typing in five numbers, and it applies the same result to red, green and blue. There is nothing to set in the parameter list because the shape of the curve is the whole parameter.</p>
+<p>Reach for this over Levels when the fix is not a straight gamma bend, an S-curve for extra punch in the midtones with the black and white points held, or a deliberate crush at one end. I use it after Gradient Map more than before it: gradmap already assigns the colors, Curve then adjusts how much of the image sits in the bright versus dark stops of that ramp. Because it works on luminance per channel and not on hue, a strong curve can shift color balance as a side effect, which is sometimes the point and sometimes not.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<hr>
+<h2>Clamp</h2>
+<p><img src="./gifs/clamp.gif" alt="Clamp demo" width="256" height="256"></p>
+<p><em>Clips whatever falls below one limit and whatever rises above another.</em></p>
+<p>Crushes anything below <strong>Low</strong> up to Low and anything above <strong>High</strong> down to High, on each of red, green and blue; alpha is untouched. If you set High below Low they swap, so there is no way to get a broken range.</p>
+<p>It reads like a blunt version of Levels, and that is exactly the job: I use it to guarantee a flat floor or ceiling after a Contrast push has crushed blacks further than intended, or to keep a height map from a Curvature node inside a safe band before an Emboss. Unlike Levels there is no remap of the surviving range, values inside [Low, High] pass through unchanged, only the extremes get pinned.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Low</strong>: 0 .. 255, default 0, keyable</li>
+<li><strong>High</strong>: 0 .. 255, default 255, keyable</li>
+</ul>
+<hr>
+<h2>Threshold</h2>
+<p><img src="./gifs/threshold.gif" alt="Threshold demo" width="256" height="256"></p>
+<p><em>Splits the image into black and white at a luminance level.</em></p>
+<p>Splits the image into pure black and pure white at <strong>Level</strong>, judged on luminance; <strong>Invert</strong> swaps which side comes out white. Color is discarded entirely, both sides land on 0 or 255 for red, green and blue.</p>
+<p>This is the node that turns a soft generator output into a hard silhouette: Quantize still leaves you three or four tones, Threshold leaves you one edge. I put it right before a Bevel or a Distance node whenever the upstream shape is a gradient rather than flat color. <strong>Invert mask</strong> works on the node's own Mask input as usual, letting the rest of the image through unaffected where the mask says so, rather than affecting which side of Level counts as on.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Level</strong>: 0 .. 255, default 128, keyable</li>
+<li><strong>Invert</strong>: on / off, default off, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Histogram</h2>
+<p><img src="./gifs/histogram.gif" alt="Histogram demo" width="256" height="256"></p>
+<p><em>Narrows, stretches or shifts a luminance band; a mask lets the input through.</em></p>
+<p>Four <strong>Mode</strong>s built on one 256-entry lookup of luminance. <strong>Scan</strong> is a soft threshold whose edge narrows as <strong>Contrast</strong> climbs toward 100 (a hard cut at the far end). <strong>Select</strong> keeps a band of width <strong>Range</strong> around <strong>Position</strong> and drops everything else, with <strong>Softness</strong> turning the cutoff into a smoothstep fade instead of a hard edge. <strong>Range</strong> stretches that same band out to fill the full 0..1 tone. <strong>Shift</strong> rotates every tone by Position, wrapping at the top, which is closer to a palette cycle than a selection.</p>
+<p>Wherever a Mask is not wired, this answers an opaque grey everywhere, which is the honest way to say &quot;no input to fall back on&quot; rather than doing nothing. I use <strong>Select</strong> on a Noise to carve out one thin band of value as a scatter mask, tightening <strong>Range</strong> until only isolated speckles remain.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Mode</strong>: Scan / Select / Range / Shift, default Scan, keyable</li>
+<li><strong>Position</strong>: 0 .. 100, default 50, keyable</li>
+<li><strong>Contrast</strong>: 0 .. 100, default 50, only when kind = Scan, keyable</li>
+<li><strong>Range</strong>: 1 .. 100, default 20, only when kind = Select / Range, keyable</li>
+<li><strong>Softness</strong>: 0 .. 100, default 10, only when kind = Select, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Quantize</h2>
+<p><img src="./gifs/quantize.gif" alt="Quantize demo" width="256" height="256"></p>
+<p><em>Reduces tones to N steps, with Bayer or blue noise dithering.</em></p>
+<p>Reduces tones to <strong>Steps</strong> flat levels (2 to 16) and, with <strong>Dither</strong>, breaks up the resulting bands with an ordered pattern: <strong>Bayer 2x2</strong> and <strong>4x4</strong> for a visible grid, <strong>Blue Noise</strong> for a texture with no repeating structure. <strong>None</strong> is a plain posterize.</p>
+<p>Four steps with Bayer 4x4 is my starting point for a retro dithered ramp on a light source. Dithering always leaves a scatter of single stray pixels at the boundary between bands: follow this with a Cluster node (Mode Islands, small <strong>Min size</strong>) to melt those strays into their neighbours if the result should read as flat color regions rather than a dither pattern. <strong>Invert mask</strong> applies to the node's own Mask input.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Steps</strong>: 2 .. 16, default 4, keyable</li>
+<li><strong>Dither</strong>: None / Bayer 2x2 / Bayer 4x4 / Blue Noise, default None, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Grayscale</h2>
+<p><img src="./gifs/grayscale.gif" alt="Grayscale demo" width="256" height="256"></p>
+<p><em>Converts to gray by luminance, average, lightness, maximum or minimum.</em></p>
+<p>Five ways to flatten color, and the difference matters more than it looks. <strong>Luminance</strong> (the default) weighs green highest and reads closest to how brightness looks to the eye. <strong>Average</strong> treats all three channels equally, which is flatter and sometimes truer to a stylized palette. <strong>Lightness</strong> takes the midpoint between the brightest and darkest channel. <strong>Max</strong> and <strong>Min</strong> keep only the highest or lowest channel value, which posterizes hard and is useful for pulling out one color's mask-like presence rather than a natural grey.</p>
+<p>I default to Luminance unless a specific channel is doing something odd, then switch to Max or Min to see which channel is causing it.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Method</strong>: Luminance / Average / Lightness / Max / Min, default Luminance, keyable</li>
+</ul>
+<hr>
+<h2>HSL</h2>
+<p><img src="./gifs/hsl.gif" alt="HSL demo" width="256" height="256"></p>
+<p><em>Shifts the hue, saturation and lightness of everything coming in.</em></p>
+<p>Shifts <strong>Hue</strong> (-180 to 180), <strong>Saturation</strong> and <strong>Lightness</strong> (-100 to 100 each) by adding the offset to whatever the pixel already has, not by setting an absolute value. Zero on all three is the identity.</p>
+<p>Because it adds rather than replaces, this node keeps whatever shading and hue variation the input already had; a gradient painted sprite stays a gradient, rotated around the color wheel or pushed lighter. That is the main difference from Color Swap, which replaces one specific color rather than shifting all of them together. Wire a Mask in to recolor one region of a sprite (an eye color, a gem) without touching the rest; <strong>Invert mask</strong> flips which side of that mask gets the shift.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Hue</strong>: -180 .. 180, default 0, keyable</li>
+<li><strong>Saturation</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Lightness</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Gradient Map</h2>
+<p><img src="./gifs/gradmap.gif" alt="Gradient Map demo" width="256" height="256"></p>
+<p><em>Swaps each tone for the color it lands on in a ramp.</em></p>
+<p>Swaps each tone for the color it lands on along a ramp. Wire an image into the <strong>Ramp</strong> input and it reads that image's middle row as the gradient, palette or plain color strip alike, so any node that produces a strip of color can drive this one.</p>
+<p>This is the node I reach for once a shape or a height field is finished and needs its final colors: a Bevel's height output straight into Gradient Map's In, a hand-picked ramp into Ramp, done. Because the ramp comes from an actual image rather than two fixed colors, swapping which Ramp is wired in is the fastest way to reskin the same shape into a different material. Feed it a one-pixel-tall strip if you want an exact, non-interpolated set of stops rather than a smooth gradient.</p>
+<p><strong>In:</strong> In (image), Ramp (image) &middot; <strong>Out:</strong> image</p>
+<hr>
+<h2>Color To Mask</h2>
+<p><img src="./gifs/colortomask.gif" alt="Color To Mask demo" width="256" height="256"></p>
+<p><em>Turns one specific color into a white mask, with tolerance and softening.</em></p>
+<p>Turns everything close to <strong>Color</strong> into white and everything else black, forming a plain grayscale mask. <strong>Tolerance</strong> sets how far a pixel can drift from that exact color and still count; <strong>Softness</strong> turns the cutoff into a smooth fade instead of a hard edge. <strong>Invert</strong> swaps which side comes out white.</p>
+<p>This is the node to reach for when you need a Mask input somewhere else but only have a flat-colored sprite to build it from: pick the color you want isolated, tolerance 0 for an exact palette match, higher for a range of shades of the same color. I usually push <strong>Softness</strong> up a little even at tolerance 0, since a hard mask edge at pixel scale can look more aliased than the source art did.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Color</strong>: colour, default #ffffff, keyable</li>
+<li><strong>Tolerance</strong>: 0 .. 100, default 20, keyable</li>
+<li><strong>Softness</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Invert</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Color Swap</h2>
+<p><img src="./gifs/colorswap.gif" alt="Color Swap demo" width="256" height="256"></p>
+<p><em>Swaps one color for another, flat or by shifting its hue and saturation.</em></p>
+<p>Repaints whatever matches <strong>From</strong> with <strong>To</strong>, and <strong>Mode</strong> decides how much of the original shading survives. <strong>Flat</strong> replaces the matched pixel outright, losing any gradient it had. <strong>Shift</strong> adds the From-to-To difference in hue, saturation and lightness instead, so a sprite shaded from dark red to bright red keeps that same shading after becoming blue (this is the node's answer to Substance's Replace Color). <strong>Hue+Sat</strong> takes To's hue and saturation but keeps the pixel's own lightness, which is the one to use when the source art already has good value contrast and only the color itself needs to change.</p>
+<p><strong>Tolerance</strong> and <strong>Softness</strong> work exactly like Color To Mask; <strong>Amount</strong> blends the whole effect in from 0 to 100 if a full swap is too strong.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Mode</strong>: Flat / Shift / Hue+Sat, default Flat, keyable</li>
+<li><strong>From</strong>: colour, default #ffffff, keyable</li>
+<li><strong>To</strong>: colour, default #000000, keyable</li>
+<li><strong>Tolerance</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Softness</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Amount</strong>: 0 .. 100, default 100, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Dither</h2>
+<p><img src="./gifs/dither.gif" alt="Dither demo" width="256" height="256"></p>
+<p><em>Fakes intermediate tones with Bayer screens, blue noise or diffusion.</em></p>
+<p>Fakes intermediate tones between flat steps. With nothing wired into <strong>Ramp</strong>, it posterizes to <strong>Steps</strong> levels the same way Quantize does, textured by <strong>Mode</strong>: <strong>Bayer 2x2/4x4/8x8</strong> for a visible ordered grid at increasing fineness, <strong>Blue Noise</strong> for scatter with no repeating pattern, <strong>Pattern</strong> to read the threshold from a wired image instead, <strong>Diffuse</strong> for Floyd-Steinberg error diffusion (<strong>Serpentine</strong> alternates row direction so the errors do not drift into diagonal streaks).</p>
+<p>Wire something into <strong>Ramp</strong> and the behavior changes: instead of stepping brightness, each pixel snaps to the nearest color of that ramp or palette, nudged by the same dither pattern before the snap. That is how you get a proper dithered transition between two specific palette colors rather than between black and white. <strong>Amount</strong> scales how strongly the pattern nudges the result, useful for a lighter dither than the full-strength default.</p>
+<p><strong>In:</strong> In (image), Ramp (image), Pattern (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Mode</strong>: Bayer 2x2 / Bayer 4x4 / Bayer 8x8 / Blue Noise / Pattern / Diffuse, default Bayer 4x4, keyable</li>
+<li><strong>Steps (no ramp)</strong>: 2 .. 16, default 4, keyable</li>
+<li><strong>Amount</strong>: 0 .. 100, default 100, keyable</li>
+<li><strong>Serpentine</strong>: on / off, default on, only when mode = Diffuse, keyable</li>
+</ul>
+<hr>
+<h2>Channel Mixer</h2>
+<p><img src="./gifs/channelmixer.gif" alt="Channel Mixer demo" width="256" height="256"></p>
+<p><em>Rebuilds each output channel as a mix of the three input ones.</em></p>
+<p>Rebuilds red, green and blue as a weighted sum of all three input channels, each weight running -200 to 200 with the defaults set to the identity matrix (<strong>R &lt;- R</strong> 100, everything else 0). Pushing a channel's own weight negative inverts only that channel; raising a cross term like <strong>R &lt;- G</strong> bleeds green into the red output.</p>
+<p>I use it for two things: swapping channels outright (set <strong>R &lt;- G</strong> to 100 and <strong>R &lt;- R</strong> to 0 to move green into red) when a normal map or a packed mask came out with channels in the wrong slot, and subtracting one channel from another (a negative cross weight) to isolate detail that only shows up as a difference between two channels.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>R &lt;- R</strong>: -200 .. 200, default 100, keyable</li>
+<li><strong>R &lt;- G</strong>: -200 .. 200, default 0, keyable</li>
+<li><strong>R &lt;- B</strong>: -200 .. 200, default 0, keyable</li>
+<li><strong>G &lt;- R</strong>: -200 .. 200, default 0, keyable</li>
+<li><strong>G &lt;- G</strong>: -200 .. 200, default 100, keyable</li>
+<li><strong>G &lt;- B</strong>: -200 .. 200, default 0, keyable</li>
+<li><strong>B &lt;- R</strong>: -200 .. 200, default 0, keyable</li>
+<li><strong>B &lt;- G</strong>: -200 .. 200, default 0, keyable</li>
+<li><strong>B &lt;- B</strong>: -200 .. 200, default 100, keyable</li>
+</ul>
+<hr>
+<h2>Contrast</h2>
+<p><img src="./gifs/contrast.gif" alt="Contrast demo" width="256" height="256"></p>
+<p><em>Spreads or gathers tones around the midpoint, and raises or lowers brightness.</em></p>
+<p><strong>Contrast</strong> scales every value around the middle grey point, from flat (-100, everything collapses to grey) through identity (0) up to four times steeper (100); <strong>Luminosity</strong> then shifts the whole result brighter or darker. Both run -100 to 100.</p>
+<p>This is a blunter, faster tool than Levels for the common case of needing more punch and nothing else: one slider instead of five. I push Contrast to 40-60 on most flat generator output before it reaches a Threshold, since a soft edge threshold much better once the tones on either side are already pulled apart. Past about 80 the effect gets aggressive quickly, since the scale keeps climbing to 4x at the top of the range. <strong>Invert mask</strong> applies to the node's own Mask input.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Contrast</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Luminosity</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Highpass</h2>
+<p><img src="./gifs/highpass.gif" alt="Highpass demo" width="256" height="256"></p>
+<p><em>Keeps the fine detail by subtracting a blurred version of itself.</em></p>
+<p>Subtracts a blurred copy of the input from itself, so only the fine detail (edges, texture, noise finer than <strong>Radius</strong>) survives, centered on mid grey. <strong>Grayscale</strong> collapses the result to a single channel instead of keeping it in color, which is what a height field or a bump-adjacent input usually wants.</p>
+<p>I use this to pull texture detail out of a Noise before feeding it to a Sharpen elsewhere in the graph, or as a quick way to see how much fine grain a generator is actually contributing once the broad shape is subtracted away. Larger <strong>Radius</strong> keeps coarser detail in the result along with the fine grain; smaller keeps only the sharpest edges.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Radius</strong>: 1 .. 32, default 4, keyable</li>
+<li><strong>Grayscale</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Color Match</h2>
+<p><img src="./gifs/colormatch.gif" alt="Color Match demo" width="256" height="256"></p>
+<p><em>Matches the mean and deviation of each channel to those of the reference.</em></p>
+<p>Matches the input's color statistics, mean and spread per channel, to a wired <strong>Ref</strong> image, then blends that matched result back in by <strong>Amount</strong>. At Amount 100 the input takes on Ref's overall tone and contrast; lower values ease off toward the unmatched original.</p>
+<p>This is the node for making two textures that were generated separately (a wall and a floor, say) read as the same lighting and material family without manually eyeballing Levels on each one: wire the piece you want to match into In, the one you are matching against into Ref. It matches statistics, not specific colors, so it will not turn a green wall red, it will make a slightly-too-bright green wall sit at the same brightness and contrast as its reference.</p>
+<p><strong>In:</strong> In (image), Ref (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Amount</strong>: 0 .. 100, default 100, keyable</li>
+</ul>
+
+</body>
+</html>

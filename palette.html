@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spaghetti node guide: Palette</title>
+<style>
+  body { max-width: 44rem; margin: 2rem auto; padding: 0 1rem;
+    font: 16px/1.55 system-ui, sans-serif; background: #1b1b1f; color: #e4e4e4; }
+  a { color: #7fb6ff; } code { background: #2a2a30; padding: 0 .25em; }
+  img { image-rendering: pixelated; border: 1px solid #333; }
+  hr { border: 0; border-top: 1px solid #333; margin: 2.5rem 0; }
+</style>
+</head>
+<body>
+<p><a href="index.html">All folders</a></p>
+<h1>Spaghetti node guide: Palette</h1>
+<p>Aseprite treats a palette as a strip of pixels you paint at the bottom of the editor. Spaghetti treats it as its own type: a list of colours that travels on a wire, gets read, sorted, combined and applied like any other value in the graph. The Palette folder has three shelves. Source is where a list comes from (the sprite, a file, a preset, or one you type in yourself). Build is what turns one list into another, or a colour into a whole scheme. Apply is what a palette does once it meets an image: quantizing, recolouring, mapping, cycling.</p>
+<p>The shelf order is also a workflow order: pull a palette in or type one, shape it on Build, then drop it on Apply where the pixels are. Most of these nodes read a <code>Palette</code> port and fall back to the sprite's own colours when nothing is wired, so Match Palette or Bit Reduce work on a fresh graph with zero setup.</p>
+<hr>
+<h2>Palette</h2>
+<p><img src="./gifs/palette.gif" alt="Palette demo" width="256" height="256"></p>
+<p><em>Brings the sprite palette in as a color strip, in hard steps.</em></p>
+<p>This is the node that reads a real palette instead of drawing one from scratch. <strong>Source</strong> picks where from: <code>Current</code> is the sprite open in the editor, <code>File</code> loads a <code>.pal</code>/<code>.gpl</code>/<code>.ase</code> off disk, and <code>Preset</code> gives you twelve hardware palettes baked into the product (NES, Game Boy, Commodore 64, both CGA modes, EGA, ZX Spectrum, MSX, Apple II, Master System, PICO-8). Pick Preset and a credit line for the machine shows up under the combo.</p>
+<p><strong>From</strong> and <strong>To</strong> cut a range out of the list before anything downstream sees it (0 on either side means the open end), which is how you pull only the greys out of an NES palette or skip the transparent slot some formats put first. <strong>Reverse</strong> flips the list itself now, not only the picture of it, so a ramp you built dark to light comes out light to dark and stays a real ramp for the next node. <strong>Blend between colours</strong> only changes how this node's own strip looks when you preview it; every other node reads the hard list of entries.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> palette</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Source</strong>: Current / File / Preset, default Current, keyable</li>
+<li><strong>Preset</strong>: NES / Game Boy / Commodore 64 / CGA / CGA 0 / CGA 1 / EGA / ZX Spectrum / MSX / Apple II / Master System / PICO-8, default NES, only when source = Preset, keyable</li>
+<li><strong>From (0=all)</strong>: 0 .. 256, default 0, keyable</li>
+<li><strong>To (0=end)</strong>: 0 .. 256, default 0, keyable</li>
+<li><strong>Blend between colours</strong>: on / off, default off, keyable</li>
+<li><strong>Reverse</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Swatches</h2>
+<p><img src="./gifs/palswatches.gif" alt="Swatches demo" width="256" height="256"></p>
+<p><em>Holds a list of colours typed into the graph and edited in a window.</em></p>
+<p>The palette the graph owns outright. Every other Source node borrows a list from somewhere else (the sprite, a file, a machine); this one keeps its colours in <code>params.colors</code>, so they save with the <code>.sgp</code> and open the same way on a different sprite or a different computer. There is no combo, no path, no slider that matters: the whole node is a button that opens an editor window where you add, remove and repaint entries by hand.</p>
+<p>I reach for this when a graph needs a specific, opinionated palette that has nothing to do with the sprite it happens to be open next to: a UI panel's colour set, a fixed ramp for a recurring effect, a reference scheme copied from a mood board. It starts at two colours, black and white, because a one-colour palette cannot show what the type even is.</p>
+<p><strong>Blend between colours</strong> is the only parameter and it works the same way it does on the Palette node: it smooths the preview strip, it does not touch what downstream nodes read. Wire it into Palette Adjust or Palette Sort and edit it in place instead of retyping colours every time you want a variant.</p>
+<p><strong>In:</strong> nothing &middot; <strong>Out:</strong> palette</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Blend between colours</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Palette Extract</h2>
+<p><img src="./gifs/palextract.gif" alt="Palette Extract demo" width="256" height="256"></p>
+<p><em>Reads the colours of an image into a palette by median cut, k-means or plain uniques.</em></p>
+<p>Turns a picture into a palette instead of a palette into a picture, which is the other half of the workflow Palette Sheet and Palette node cover. <strong>Method</strong> picks the algorithm: <code>Median Cut</code> is the fast, deterministic default (Heckbert's 1982 split of the colour cube), <code>K-Means</code> seeds from the same cut and then relaxes toward the colours that actually cover the most area, and <code>Unique</code> does not quantize at all, it hands back exactly the colours that are there, in the order they first appear. Unique is what you want on art that was already painted in an indexed palette; the other two are for photos, renders, or anything with more colours than a sprite can afford.</p>
+<p><strong>Colours</strong> sets how many entries Median Cut or K-Means aim for (2 to 256; Unique ignores it, its count is whatever the source has). <strong>Sort</strong> orders the result afterward: <code>Frequency</code> is the one only this node can offer, since it is the only node that knows how many pixels each colour covered. <strong>Alpha min</strong> (default 8) is the cutoff below which a pixel is treated as empty rather than as a colour to count, so a soft-edged sprite does not fill your new palette with near-invisible fringe pixels.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> palette</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Method</strong>: Median Cut / K-Means / Unique, default Median Cut, keyable</li>
+<li><strong>Colours</strong>: 2 .. 256, default 16, except when method = Unique, keyable</li>
+<li><strong>Sort</strong>: None / Luma / Hue / Frequency, default None, keyable</li>
+<li><strong>Alpha min</strong>: 0 .. 255, default 8, keyable</li>
+</ul>
+<hr>
+<h2>Ramp Generator</h2>
+<p><img src="./gifs/rampgen.gif" alt="Ramp Generator demo" width="256" height="256"></p>
+<p><em>Turns a base color into a ramp of N tones with a hue shift.</em></p>
+<p>A ramp out of one colour, which is different from a whole palette out of one colour: this node spreads lightness either side of the base you picked, Palette Builder below spreads it across a fixed low-to-high range instead. <strong>Steps</strong> (2-16) is the ramp length, and <strong>Spread %</strong> is how far it reaches from the base's own lightness, so a low spread keeps a tight cluster of near-identical tones and a high one runs closer to black and white.</p>
+<p><strong>Hue dark</strong> and <strong>Hue light</strong> turn the hue as you go darker or lighter, which is the pixel-art habit of cooling shadows and warming highlights; the matching <strong>Sat dark</strong>/<strong>Sat light</strong> pair does the same to saturation, and the defaults already lean that way (-20/20 hue, 10/-10 saturation). <strong>Curve</strong> switches between <code>Linear</code>, evenly spaced steps, and <code>Ease</code>, which stays shallow near the base colour and steepens toward the two ends, useful when you want the midtones to hold together and the extremes to do the work.</p>
+<p>Wire a Solid, a Swatch or a photo into <strong>Base</strong> and it overrides the colour knob entirely, reading the centre pixel of whatever arrives.</p>
+<p><strong>In:</strong> Base (image) &middot; <strong>Out:</strong> palette</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Base</strong>: colour, default #ffffff, keyable</li>
+<li><strong>Steps</strong>: 2 .. 16, default 5, keyable</li>
+<li><strong>Spread %</strong>: 10 .. 100, default 60, keyable</li>
+<li><strong>Hue dark</strong>: -180 .. 180, default -20, keyable</li>
+<li><strong>Hue light</strong>: -180 .. 180, default 20, keyable</li>
+<li><strong>Sat dark</strong>: -100 .. 100, default 10, keyable</li>
+<li><strong>Sat light</strong>: -100 .. 100, default -10, keyable</li>
+<li><strong>Curve</strong>: Linear / Ease, default Linear, keyable</li>
+</ul>
+<hr>
+<h2>Palette Builder</h2>
+<p><img src="./gifs/palbuild.gif" alt="Palette Builder demo" width="256" height="256"></p>
+<p><em>Builds a whole palette from one colour: N hues by M shades, with the hue shift.</em></p>
+<p>The generator Lospec and Coolors put on the web, built into the graph. One base colour becomes a whole palette of <strong>Hues</strong> by <strong>Shades per hue</strong>, following a colour-wheel <strong>Harmony</strong>: <code>Mono</code> is one hue, <code>Complementary</code> adds its opposite, <code>Analogous</code> adds its two neighbours, <code>Triadic</code> and <code>Tetradic</code> space three or four hues evenly, <code>Split</code> pairs the base with the two neighbours of its complement, and <code>Custom</code> opens <strong>Hues</strong> and <strong>Hue spread</strong> to hand-place any number of them.</p>
+<p>A fresh node reads as a ramp of pure greys, because pure white has no saturation for the hue knobs to turn yet; pick a base colour in the swatch and the harmony wakes up. <strong>Value min</strong>/<strong>Value max</strong> set the lightness range every ramp covers (12 to 92 by default, so nothing bottoms out at pure black or blows to pure white), and <strong>Hue dark</strong>/<strong>Hue light</strong> plus <strong>Sat falloff</strong> apply the same shadows-cool, highlights-warm curve Ramp Generator uses, but across the whole built palette rather than one ramp. <strong>Grey ramp</strong> appends a neutral spine with no hue at all, which is what you want under a build meant to carry both saturated and desaturated art. <strong>Sort</strong> picks whether the output stays grouped as ramps or gets flattened by luma.</p>
+<p><strong>In:</strong> Base (image) &middot; <strong>Out:</strong> palette</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Base</strong>: colour, default #ffffff, keyable</li>
+<li><strong>Harmony</strong>: Mono / Complementary / Analogous / Triadic / Split / Tetradic / Custom, default Mono, keyable</li>
+<li><strong>Hues</strong>: 1 .. 16, default 4, only when harmony = Custom, keyable</li>
+<li><strong>Hue spread</strong>: 0 .. 360, default 180, only when harmony = Custom, keyable</li>
+<li><strong>Shades per hue</strong>: 2 .. 16, default 5, keyable</li>
+<li><strong>Hue dark</strong>: -180 .. 180, default -20, keyable</li>
+<li><strong>Hue light</strong>: -180 .. 180, default 20, keyable</li>
+<li><strong>Sat falloff</strong>: 0 .. 100, default 30, keyable</li>
+<li><strong>Value min</strong>: 0 .. 100, default 12, keyable</li>
+<li><strong>Value max</strong>: 0 .. 100, default 92, keyable</li>
+<li><strong>Sort</strong>: Ramps / Luma, default Ramps, keyable</li>
+<li><strong>Grey ramp</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Palette Resample</h2>
+<p><img src="./gifs/palresample.gif" alt="Palette Resample demo" width="256" height="256"></p>
+<p><em>Resamples a palette to N colours, snaps to the ones it has, or drops the duplicates.</em></p>
+<p>Changes how many entries a palette has, in three different ways that answer three different questions. <strong>Method</strong> <code>Even</code> reads the list as a continuous ramp and mixes new colours at N equal steps, which is what you want when a palette really is a gradient and you need it shorter or longer. <code>Snap</code> picks N entries that were already there, nearest to those same steps, so it never invents a colour, the one to use on a hand-picked palette you don't want blended. <code>Dedupe</code> doesn't touch length at all: it drops any entry within <strong>Tolerance</strong> of one it already kept, which at tolerance 0 means exact duplicates only.</p>
+<p><strong>Count</strong> (2-256, hidden under Dedupe since that mode doesn't take one) is the target length for Even and Snap. <strong>From</strong>/<strong>To</strong> cut the source range first, and <strong>Reverse</strong> flips the result last. I use Even to turn a five-stop extracted ramp into three for a tighter print, and Snap to shrink a hand-picked sixteen-colour set down to eight without the mixing washing out the artist's choices.</p>
+<p><strong>In:</strong> Palette (palette) &middot; <strong>Out:</strong> palette</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Method</strong>: Even / Snap / Dedupe, default Even, keyable</li>
+<li><strong>Count</strong>: 2 .. 256, default 5, except when method = Dedupe, keyable</li>
+<li><strong>Tolerance</strong>: 0 .. 100, default 0, only when method = Dedupe, keyable</li>
+<li><strong>From (0=all)</strong>: 0 .. 256, default 0, keyable</li>
+<li><strong>To (0=end)</strong>: 0 .. 256, default 0, keyable</li>
+<li><strong>Reverse</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Palette Sort</h2>
+<p><img src="./gifs/palsort.gif" alt="Palette Sort demo" width="256" height="256"></p>
+<p><em>Orders a palette by luma, hue or saturation, or into the ramps an artist would leave.</em></p>
+<p>Puts a palette in an order, and the order is data other nodes can read: Palette Cycle rotates through it, Palette Sheet draws it in it. <strong>Sort by</strong> <code>Luma</code> is Rec. 601 brightness, the whole engine's usual measure; <code>Lightness</code> is HSL's L, which is not the same axis (a saturated yellow and a saturated blue can share a lightness while sitting stops apart in luma). <code>Hue</code> sorts round the wheel with greys kept up front, since a grey has no hue to place. <code>Saturation</code> runs grey to pure. <code>Reverse</code> isn't a sort at all, it's only where a user goes looking for one, so it lives in this combo rather than forcing a second node.</p>
+<p><code>Ramps</code> is the one that matters most in practice: it buckets colours by hue (bucket width set by <strong>Hue step</strong>, only shown in this mode) and orders each bucket dark to light, which is what an artist actually means by &quot;this palette is tidy.&quot; It's the sort to run right after Palette Extract, before you look at what you got.</p>
+<p><strong>In:</strong> Palette (palette) &middot; <strong>Out:</strong> palette</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Sort by</strong>: Luma / Lightness / Hue / Saturation / Ramps / Reverse, default Luma, keyable</li>
+<li><strong>Hue step</strong>: 1 .. 180, default 30, only when by = Ramps, keyable</li>
+</ul>
+<hr>
+<h2>Palette Adjust</h2>
+<p><img src="./gifs/paladjust.gif" alt="Palette Adjust demo" width="256" height="256"></p>
+<p><em>Shifts hue, saturation, lightness, contrast and gamma of every entry of a palette.</em></p>
+<p>Moves every entry of a palette in HSL, one by one, without merging or reordering anything: two entries that were the same colour are still two entries afterward. It exists because the alternative, drawing the palette as a strip, running a filter over the pixels and reading the strip back, loses colours the moment the strip is narrower than the palette is long.</p>
+<p><strong>Hue</strong>, <strong>Saturation</strong> and <strong>Lightness</strong> are plain offsets. <strong>Contrast</strong> pivots on the palette's own mean luma rather than a fixed midpoint, so it stays useful on a palette that already skews dark or light. <strong>Hue dark</strong>/<strong>Hue light</strong> repeat the shadows-cool, highlights-warm split Ramp Generator and Palette Builder use, but applied after the fact to a palette you already built some other way. <strong>Gamma</strong> (default 100, meaning off) reshapes each channel independently.</p>
+<p>Every knob sits at an identity default, and the node is written so that identity is exact, not merely close: with nothing touched it skips the HSL round trip entirely rather than running it with zeroes, because RGB to HSL and back loses precision even at zero offset. I use this to key a whole scene's palette from day to night on <strong>Light</strong> and <strong>Hue</strong> together, keyframed on the timeline.</p>
+<p><strong>In:</strong> Palette (palette) &middot; <strong>Out:</strong> palette</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Hue</strong>: -180 .. 180, default 0, keyable</li>
+<li><strong>Saturation</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Lightness</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Contrast</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Hue dark</strong>: -180 .. 180, default 0, keyable</li>
+<li><strong>Hue light</strong>: -180 .. 180, default 0, keyable</li>
+<li><strong>Gamma</strong>: 10 .. 300, default 100, keyable</li>
+</ul>
+<hr>
+<h2>Palette Combine</h2>
+<p><img src="./gifs/palcombine.gif" alt="Palette Combine demo" width="256" height="256"></p>
+<p><em>Joins two palettes end to end or in turn, or keeps what they share or do not.</em></p>
+<p>Joins two palettes end to end, or takes what they share or don't. <strong>Mode</strong> <code>Append</code> is A then B, plain concatenation, and the only mode that can overflow the 256-colour cap (a warning label shows up on screen in exactly the two modes where that matters). <code>Interleave</code> zips them, A1 B1 A2 B2, with the longer list finishing on its own once the shorter runs out. <code>Intersect</code> keeps only A's entries that B also has, within <strong>Tolerance</strong>; <code>Subtract</code> keeps only the ones B doesn't have. Both of the last two answer in A's own order and keep A's duplicates, because in this category order is data and nothing gets removed unless you ask.</p>
+<p><strong>Drop duplicates</strong> runs last, after whichever mode already ran, and it means the same thing in every mode: no two entries closer than Tolerance survive. On Append that gives you the union people expect from a Combine node; on Interleave it strips the tones the two ramps already had in common. I use Subtract to find what a new palette adds over an old one before I merge them by hand.</p>
+<p><strong>In:</strong> A (palette), B (palette) &middot; <strong>Out:</strong> palette</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Mode</strong>: Append / Interleave / Intersect / Subtract, default Append, keyable</li>
+<li><strong>Drop duplicates</strong>: on / off, default off, keyable</li>
+<li><strong>Tolerance</strong>: 0 .. 100, default 0, keyable</li>
+</ul>
+<hr>
+<h2>Palette Blend</h2>
+<p><img src="./gifs/palblend.gif" alt="Palette Blend demo" width="256" height="256"></p>
+<p><em>Crossfades one palette into another by index or by nearest colour.</em></p>
+<p>A crossfade between two palettes, driven by one number. <strong>Amount</strong> (0-100) is exactly what a mixer knob should be: at 0 the output is A, at 100 it's what <strong>Match</strong> chose from B, and because it is an ordinary parameter you can key it on the timeline and walk a whole scene's colours from a day palette to a night one over as many frames as you like.</p>
+<p><strong>Match</strong> <code>By Index</code> pairs entry i of A with entry i of B; when the two lists differ in length the shorter one is stretched by sampling rather than blended a second time, so nothing important gets skipped. <code>Nearest</code> instead pairs every entry of A with whichever colour in B is perceptually closest, using the same weighted distance the rest of the engine measures with, which is the mode to use when A and B were not built to line up index for index.</p>
+<p>Unlike Palette Adjust this node has no identity to protect at its defaults; a fresh Palette Blend is already halfway between its two inputs, because a mixer that looks broken until you touch it is worse than one that shows a mix from the moment you drop it.</p>
+<p><strong>In:</strong> A (palette), B (palette) &middot; <strong>Out:</strong> palette</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Amount</strong>: 0 .. 100, default 50, keyable</li>
+<li><strong>Match</strong>: By Index / Nearest, default By Index, keyable</li>
+</ul>
+<hr>
+<h2>Match Palette</h2>
+<p><img src="./gifs/matchpalette.gif" alt="Match Palette demo" width="256" height="256"></p>
+<p><em>Maps the input onto the sprite palette colors, with dithering.</em></p>
+<p>Snaps every pixel of an image onto the nearest colour of a palette, which is the node that actually turns a graph's output back into something a game console or a strict pixel-art style could display. Wire a <strong>Palette</strong> in and that list is used exactly as its own node cut it; leave it unwired and the node reads the sprite's own palette instead, cut by <strong>From</strong>/<strong>To</strong> the same way the Palette node's own range works.</p>
+<p><strong>Dither</strong> adds an ordered offset before matching so a smooth gradient keeps its shape instead of banding hard: <code>Bayer 2x2</code> and <code>Bayer 4x4</code> are classic ordered screens at two coarseness levels, <code>Blue Noise</code> spreads the same idea without a visible grid pattern. <strong>Dither amount</strong> (hidden when Dither is <code>None</code>) scales how far that offset pushes a pixel before it snaps, from a light touch to a full-strength scatter.</p>
+<p>Fully transparent pixels are left alone in every mode, so this node is safe to drop right before an Export Slot without eating your alpha. I run it right after Match Palette's cousin, Bit Reduce, or after any generator that overshoots the palette a target platform can actually show.</p>
+<p><strong>In:</strong> In (image), Palette (palette) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Dither</strong>: None / Bayer 2x2 / Bayer 4x4 / Blue Noise, default None, keyable</li>
+<li><strong>Dither amount</strong>: 0 .. 100, default 50, except when dither = None, keyable</li>
+<li><strong>From (0=all)</strong>: 0 .. 256, default 0, keyable</li>
+<li><strong>To (0=end)</strong>: 0 .. 256, default 0, keyable</li>
+</ul>
+<hr>
+<h2>Bit Reduce</h2>
+<p><img src="./gifs/bitreduce.gif" alt="Bit Reduce demo" width="256" height="256"></p>
+<p><em>Drops the image to N colors by median cut, with optional dithering.</em></p>
+<p>The legacy way to quantize an image, kept for the graphs that already use it. <strong>Colours</strong> (2-64) sets how many the median cut aims for, and the dithering options (<code>None</code>, <code>Bayer 2x2</code>, <code>Bayer 4x4</code>, <code>Blue Noise</code>, with <strong>Dither amount</strong> scaling the effect) work exactly like Match Palette's own.</p>
+<p><strong>Output</strong> is the one row worth reading twice: <code>Image</code> is the normal path, a quantized picture on the wire, and <code>Palette</code> hands back the strip-of-pixels reading of a palette this node used to be the only way to get. That mode is marked legacy on the row itself and points at Palette Extract, which does the same median cut but puts an actual <code>palette</code> typed list on the wire instead of a picture of one, so Palette Sort, Palette Adjust and the rest of the category can read it directly. Unless you're maintaining an older graph, reach for Palette Extract and quantize with Match Palette instead: same algorithm underneath, but the palette becomes a value you can keep shaping.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Colours</strong>: 2 .. 64, default 8, keyable</li>
+<li><strong>Dither</strong>: None / Bayer 2x2 / Bayer 4x4 / Blue Noise, default None, keyable</li>
+<li><strong>Dither amount</strong>: 0 .. 100, default 50, except when dither = None, keyable</li>
+<li><strong>Output (Palette: legacy, use Palette Extract)</strong>: Image / Palette, default Image, keyable</li>
+</ul>
+<hr>
+<h2>Palette Swap</h2>
+<p><img src="./gifs/palswap.gif" alt="Palette Swap demo" width="256" height="256"></p>
+<p><em>Recolors by index: a pixel found in one palette comes out as the same slot of another.</em></p>
+<p>The palette swap every retro engine ships with: a pixel that is entry i of <strong>From</strong> comes back as entry i of <strong>To</strong>. It is what Color Swap cannot do, because Color Swap only knows one colour at a time and has no notion of an index to carry across a whole list, so red slime and blue slime out of one drawing is this node's job, not that one's.</p>
+<p><strong>Match</strong> <code>By Index</code> requires the pixel to actually be one of From's colours (within <strong>Tolerance</strong>, exact at the default of 0); what doesn't match is handled by <strong>Unmatched</strong>, either <code>Keep</code>, left alone, or <code>Transparent</code>, cleared out. <code>Nearest</code> snaps every pixel to its closest From entry first, which is the mode for art that was not drawn strictly in that palette, and neither Tolerance nor Unmatched apply since everything matches something.</p>
+<p><strong>Shift</strong> rotates which entry of To each From index lands on, with wrap, which is a single frame of colour cycling done by hand: sweep it and you get the animation Palette Cycle automates. If To is shorter than From the wrap makes the pattern alternate rather than flattening onto one colour, which reads as a picture instead of a smear.</p>
+<p><strong>In:</strong> In (image), From (palette), To (palette) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Match</strong>: By Index / Nearest, default By Index, keyable</li>
+<li><strong>Shift</strong>: -64 .. 64, default 0, keyable</li>
+<li><strong>Tolerance</strong>: 0 .. 100, default 0, only when match = By Index, keyable</li>
+<li><strong>Unmatched</strong>: Keep / Transparent, default Keep, only when match = By Index, keyable</li>
+</ul>
+<hr>
+<h2>Index Map</h2>
+<p><img src="./gifs/palindex.gif" alt="Index Map demo" width="256" height="256"></p>
+<p><em>Turns every pixel into the index of its nearest palette entry, as grey or as a raw byte.</em></p>
+<p>Turns a picture into coordinates instead of colours: every pixel becomes the index of its nearest entry in a palette. <strong>Mode</strong> <code>Normalized</code> spreads index 1..n across the full 0-255 grey range, so a two-colour palette maps to black and white rather than black and almost-black, and it's what you wire into a Gradient Map to repaint an image with an entirely different palette. <code>Raw</code> instead writes the index itself, counted from zero, into the red channel alone (green and blue stay at 0), which is the byte-accurate reading a shader or an export script would want.</p>
+<p>I use this node two ways: as a bridge in a repaint pipeline (Index Map into Gradient Map with a second palette gives you a full recolour with none of the banding a direct swap would leave), and as a debugging view on its own, since looking at the raw index map is the fastest way to see where a Match Palette or a Palette Swap actually placed the cut between two nearby colours.</p>
+<p><strong>In:</strong> In (image), Palette (palette) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Mode</strong>: Normalized / Raw, default Normalized, keyable</li>
+</ul>
+<hr>
+<h2>Palette Cycle</h2>
+<p><img src="./gifs/palcycle.gif" alt="Palette Cycle demo" width="256" height="256"></p>
+<p><em>Rotates a palette ramp over N frames, cycling the colors of one drawing without moving a pixel.</em></p>
+<p>Mark Ferrari's colour cycling, the trick that gets water running and lava flowing out of one static frame of art, done by rotating a ramp of indices instead of redrawing anything. <strong>From</strong>/<strong>To</strong> cut the ramp to cycle (0 on either side means the open end, so a wired art file with a fixed light source in the first few entries can be left alone). Every pixel outside that cut, or further than <strong>Tolerance</strong> allows from any entry in it, is copied through untouched in every frame; <strong>Tolerance</strong> defaults to 100, the whole colour space, because here the knob decides what belongs to the ramp at all, not what counts as identical.</p>
+<p><strong>Frames</strong> at 0 answers a cycle exactly as long as the ramp, so it closes on itself with no counting required; <strong>Direction</strong> <code>Forward</code> or <code>Backward</code> picks which way the ramp turns, and <code>Ping-pong</code> runs there and back without doubling the two end frames. <strong>Phase %</strong> is the parameter to key on the timeline: animate it 0 to 100 over however many frames you like and the ramp turns exactly once, on your own clock rather than the node's. This is the node that connects the Palette category to Animation, and it is worth building a small hand-picked ramp with Swatches specifically to cycle, rather than fishing one out of a bigger palette.</p>
+<p><strong>In:</strong> In (image), Palette (palette) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>From (0=all)</strong>: 0 .. 256, default 0, keyable</li>
+<li><strong>To (0=end)</strong>: 0 .. 256, default 0, keyable</li>
+<li><strong>Frames (0=ramp)</strong>: 0 .. 64, default 0, keyable</li>
+<li><strong>Direction</strong>: Forward / Backward / Ping-pong, default Forward, keyable</li>
+<li><strong>FPS (0=auto)</strong>: 0 .. 60, default 0, keyable</li>
+<li><strong>Phase %</strong>: 0 .. 100, default 0, keyable</li>
+<li><strong>Tolerance (100=all)</strong>: 0 .. 100, default 100, keyable</li>
+</ul>
+<hr>
+<h2>Palette Sheet</h2>
+<p><img src="./gifs/palsheet.gif" alt="Palette Sheet demo" width="256" height="256"></p>
+<p><em>Draws a palette as swatches: one row, or a grid of N columns.</em></p>
+<p>Draws a palette as a picture of itself, in one of three readings depending on <strong>Columns</strong> and <strong>Cell px</strong>. Both at zero (the default) draws the classic single-row strip, the same thing a palette used to be before this category existed, and it is the only path that honours a <code>smooth</code> list, since a grid of hard swatches has no way to blend between cells.</p>
+<p>Set <strong>Cell px</strong> to a fixed size and <strong>Columns</strong> to 0 and you get one row of fixed swatches, the reading Lospec's own palette PNGs use. Give <strong>Columns</strong> a real number and the sheet reflows into a grid of that width, which is how a reference sheet for a whole project usually looks. <strong>Gap px</strong> adds space between cells, <strong>Background</strong> colours whatever shows in the gaps and around the edges, and <strong>Border</strong> draws one pixel of background around every swatch at any render size, a grid line rather than a percentage. I keep one of these wired to a project's master palette purely as a legend, dropped in the corner of a reference sheet.</p>
+<p><strong>In:</strong> Palette (palette) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Columns (0=one row)</strong>: 0 .. 32, default 0, keyable</li>
+<li><strong>Cell px (0=fit)</strong>: 0 .. 64, default 0, keyable</li>
+<li><strong>Gap px</strong>: 0 .. 16, default 0, keyable</li>
+<li><strong>Background</strong>: colour, default #000000, keyable</li>
+<li><strong>Border</strong>: on / off, default off, keyable</li>
+</ul>
+
+</body>
+</html>

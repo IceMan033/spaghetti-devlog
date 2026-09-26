@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spaghetti node guide: Blend</title>
+<style>
+  body { max-width: 44rem; margin: 2rem auto; padding: 0 1rem;
+    font: 16px/1.55 system-ui, sans-serif; background: #1b1b1f; color: #e4e4e4; }
+  a { color: #7fb6ff; } code { background: #2a2a30; padding: 0 .25em; }
+  img { image-rendering: pixelated; border: 1px solid #333; }
+  hr { border: 0; border-top: 1px solid #333; margin: 2.5rem 0; }
+</style>
+</head>
+<body>
+<p><a href="index.html">All folders</a></p>
+<h1>Spaghetti node guide: Blend</h1>
+<p>Six ways to combine two images or route between alternatives. Blend itself carries the nineteen compositing modes any paint program has, plus a mask trick for when only one input is wired. Switch and Multi Switch are not compositing at all, they route: whichever input the selector names passes through untouched. Height Blend, Paint and Layer Stack are the more specific tools, for a physically grounded terrain mix and for laying flat tones through masks rather than mixing two full textures.</p>
+<p>Everything here treats a missing input the same way: transparent, or a passthrough of whichever side is still wired, never an error. That is what lets a graph stay renderable while it is half built.</p>
+<hr>
+<h2>Blend</h2>
+<p><img src="./gifs/blend.gif" alt="Blend demo" width="256" height="256"></p>
+<p><em>Composites two images with nineteen modes, or masks a lone one with its Opacity input.</em></p>
+<p>The workhorse compositor: two images through nineteen modes at an <strong>Opacity</strong>, the same vocabulary a paint program's layer panel uses (Normal, Multiply, Screen, Overlay, the HSL group, Difference, and the rest). Wire only <strong>Top</strong> or only <strong>Base</strong> and it stops blending and starts masking: with an <strong>Opacity</strong> input plugged in, the lone image is cut by that map's luminance times its own alpha; with nothing on <strong>Opacity</strong> it passes the lone image through untouched, so an unfinished graph never goes silently blank.</p>
+<p>Dissolve is worth calling out on its own: instead of mixing colors it flips a per-pixel coin, weighted by <strong>Opacity</strong> and by the mask if one is wired, and shows <strong>Top</strong> whole or <strong>Base</strong> whole at each pixel, a scatter rather than a blend, the way it behaves in most paint programs too.</p>
+<p>I default to Multiply at 30-60% for grime over a base texture, Overlay for a cheap contrast boost, and Normal under 100% wherever a soft crossfade is all that is needed.</p>
+<p><strong>In:</strong> Top (image), Base (image), Opacity (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Mode</strong>: Normal / Dissolve / Darken / Multiply / Color Burn / Linear Burn / Lighten / Screen / Color Dodge / Add / Overlay / Soft Light / Difference / Subtract / Divide / Hue / Saturation / Color / Luminosity, default Normal, keyable</li>
+<li><strong>Opacity</strong>: 0 .. 100, default 100, keyable</li>
+</ul>
+<hr>
+<h2>Switch</h2>
+<p><img src="./gifs/switch.gif" alt="Switch demo" width="256" height="256"></p>
+<p><em>Lets one of its two inputs through, whichever the selector names.</em></p>
+<p>A one-of-two router: <strong>Input</strong> picks which of its two wired inputs reaches the output, and both are typed <em>any</em>, so a Switch passes a palette or a curve exactly as well as an image. Everything upstream of both inputs still evaluates (the graph has one shared memo across the whole thing), so a Switch does not save render time, only picks which branch gets used.</p>
+<p>It earns its place wherever a recipe has two legitimate versions of the same idea and you want to compare or key between them without rewiring: two different noise seeds for a texture set, a daytime and a nighttime palette, a rough draft feeding one branch of a graph while a slower final version feeds the other. Keyed on the timeline, <strong>Input</strong> stepping from 1 to 2 is a hard cut rather than a crossfade, which matters when a Blend's Dissolve or Normal mode is not what you want there.</p>
+<p>An unwired slot reads as fully transparent, the same as any other missing input, rather than an error.</p>
+<p><strong>In:</strong> Input 1 (any), Input 2 (any) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Input</strong>: 1 .. 2, default 1, keyable</li>
+</ul>
+<hr>
+<h2>Multi Switch</h2>
+<p><img src="./gifs/multiswitch.gif" alt="Multi Switch demo" width="256" height="256"></p>
+<p><em>Lets one of its six inputs through, whichever the selector names.</em></p>
+<p>The same router as Switch, with six inputs instead of two, for a recipe with more than one alternative worth naming: a set of five candidate noise seeds picked at build time, or six palette variants swept one at a time while judging which reads best.</p>
+<p><strong>Input</strong> is 1-based and, like Switch, keeping it as a keyed value turns the node into a slideshow along the timeline rather than a single fixed pick, useful for a quick side-by-side render of every branch without rewiring the graph six times over. Every one of the six upstream branches still evaluates whether or not it is the one selected, since nothing here prunes the graph, only the final choice of which buffer reaches the output.</p>
+<p>I reach for this over six separate Switch nodes chained together mostly for the panel: one combo naming six options reads at a glance, where a tree of twos does not.</p>
+<p><strong>In:</strong> In 1 (any), In 2 (any), In 3 (any), In 4 (any), In 5 (any), In 6 (any) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Input</strong>: 1 .. 6, default 1, keyable</li>
+</ul>
+<hr>
+<h2>Height Blend</h2>
+<p><img src="./gifs/heightblend.gif" alt="Height Blend demo" width="256" height="256"></p>
+<p><em>Mixes two textures letting the taller one win; also does snow and water.</em></p>
+<p>Mixes two textures by which one is physically taller at each pixel rather than by a fixed mask, which is what makes a rock-and-snow or a puddle-and-ground transition look grown rather than painted on. Wire <strong>Height A</strong> and <strong>Height B</strong> (grayscale, white is high) alongside the color textures <strong>A</strong> and <strong>B</strong>; with only one height wired the other reads as flat mid-gray, so <strong>B</strong> wins wherever its height beats that flat plane.</p>
+<p><strong>Mode</strong> Height is the plain comparison, <strong>A</strong> shows through wherever its height reads higher than <strong>B</strong>'s, offset by <strong>Offset / level</strong>. Snow reads the <em>slope</em> of <strong>Height A</strong> instead: it covers the flatter, upward-facing parts of <strong>A</strong> and leaves steep faces bare, the difference between snow and a plain height blend, since real snow settles on ledges rather than cliffs. Water floods <strong>B</strong> in wherever <strong>Height A</strong> drops below a level set by <strong>Offset / level</strong>, for a puddle or a flooded lowland rather than a ridge line.</p>
+<p><strong>Contrast</strong> narrows or widens the transition band between the two textures, from a hard cutoff to a wide, soft graded mix.</p>
+<p><strong>In:</strong> A (image), B (image), Height A (image), Height B (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Mode</strong>: Height / Snow / Water, default Height, keyable</li>
+<li><strong>Offset / level</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Contrast</strong>: 0 .. 100, default 50, keyable</li>
+</ul>
+<hr>
+<h2>Paint</h2>
+<p><img src="./gifs/paint.gif" alt="Paint demo" width="256" height="256"></p>
+<p><em>Fills the masked pixels with one flat colour.</em></p>
+<p>Fills whatever a <strong>Mask</strong> covers with one flat <strong>Color</strong>, at an <strong>Opacity</strong>, over a <strong>Base</strong> it leaves untouched everywhere else. It is the simple half of what Layer Stack does four times over, and the one to reach for when a recipe needs exactly one more flat tone laid over a texture rather than a whole ramp of them: a rust patch over metal, a moss patch over stone, a highlight swatch over a gem.</p>
+<p>The mask reads as luminance weighted by its own alpha, the same convention Blend's Opacity input and Alpha's Set mode both use, so a soft white stamp with a Gaussian falloff paints a soft-edged patch of color rather than a binarized stencil, and a mask that is only half-opaque paints at half strength even where it is pure white. <strong>Invert mask</strong> swaps which side gets painted without routing the mask through a separate Invert node first.</p>
+<p>I chain two or three of these when Layer Stack's fixed four slots do not fit a recipe's own logic, one Paint at a time, each layered over the last.</p>
+<p><strong>In:</strong> Base (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Color</strong>: colour, default #ff6040, keyable</li>
+<li><strong>Opacity</strong>: 0 .. 100, default 100, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Layer Stack</h2>
+<p><img src="./gifs/layerstack.gif" alt="Layer Stack demo" width="256" height="256"></p>
+<p><em>Paints up to four flat tones through four masks, bottom to top.</em></p>
+<p>Four flat tones through four masks, painted bottom to top over a <strong>Base</strong>, which is Paint's job done four times in one node instead of a chain of four. Each mask is independent and each has its own <strong>Enabled</strong> check, so turning a layer off for a preview does not require unplugging its wire.</p>
+<p>Order matters the way it does in any layered image: <strong>Mask 4</strong> paints last and covers whatever <strong>Mask 1</strong> through <strong>Mask 3</strong> already laid down wherever the two masks overlap, so put the broadest base tone (a rock's shadow color, a leaf's base green) on <strong>Mask 1</strong> and the narrowest highlight (a rim light, a vein) on <strong>Mask 4</strong>. Unlike Paint's own <strong>Opacity</strong> row, every layer here paints at a fixed full strength (through the mask's own luminance and alpha), so grading a layer's coverage is the mask's job, not a slider on this node.</p>
+<p>Four masks stacked this way is close to how Substance or Material Maker call a layer stack node, and it is the one I reach for first when a recipe needs more than two flat tones over one base texture.</p>
+<p><strong>In:</strong> Base (image), Mask 1 (image), Mask 2 (image), Mask 3 (image), Mask 4 (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Mask 1</strong>: colour, default #403050, keyable</li>
+<li><strong>Enabled</strong>: on / off, default on, keyable</li>
+<li><strong>Mask 2</strong>: colour, default #806090, keyable</li>
+<li><strong>Enabled</strong>: on / off, default on, keyable</li>
+<li><strong>Mask 3</strong>: colour, default #c8a8d8, keyable</li>
+<li><strong>Enabled</strong>: on / off, default on, keyable</li>
+<li><strong>Mask 4</strong>: colour, default #fff4e8, keyable</li>
+<li><strong>Enabled</strong>: on / off, default on, keyable</li>
+</ul>
+
+</body>
+</html>

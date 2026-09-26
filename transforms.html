@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spaghetti node guide: Transforms</title>
+<style>
+  body { max-width: 44rem; margin: 2rem auto; padding: 0 1rem;
+    font: 16px/1.55 system-ui, sans-serif; background: #1b1b1f; color: #e4e4e4; }
+  a { color: #7fb6ff; } code { background: #2a2a30; padding: 0 .25em; }
+  img { image-rendering: pixelated; border: 1px solid #333; }
+  hr { border: 0; border-top: 1px solid #333; margin: 2.5rem 0; }
+</style>
+</head>
+<body>
+<p><a href="index.html">All folders</a></p>
+<h1>Spaghetti node guide: Transforms</h1>
+<p>These eight nodes move pixels around the canvas without touching what is on them: offset, rotate, scale, mirror, warp to a quad, or blend the edges into a tile. Most pixel art starts flat and square, and a Transform node is usually the first stop after a Layer or Canvas import, before anything paints or shades it.</p>
+<p>Everything here wraps by default, so an offset that pushes a texture past the right edge brings it back on the left, the behaviour a tileable texture needs. Three of the eight, Safe Transform, Make It Tile and Symmetry, exist only to protect that result: each guarantees the edges still match after the transform runs, rather than leaving it to luck.</p>
+<hr>
+<h2>Transform</h2>
+<p><img src="./gifs/transform.gif" alt="Transform demo" width="256" height="256"></p>
+<p><em>Moves, rotates, scales and shears, with wrapping or clipping to the opaque area.</em></p>
+<p>Transform is the general purpose move: offset, rotate, scale, skew, and with Quad on, a four corner perspective pull, all in one node instead of three chained together.</p>
+<p><strong>Offset X %</strong> and <strong>Offset Y %</strong> move as a percentage of the canvas, so the same node works at 16 px and at 256 px without retyping a pixel count. <strong>Rotate</strong> turns around the centre, and <strong>Scale %</strong> with <strong>Scale Y % (0=X)</strong> left at zero scales evenly; give Scale Y a value of its own to squash or stretch one axis, useful for turning a round emitter core into an oval one.</p>
+<p><strong>Wrap (tile)</strong> is on by default, so a texture pushed past an edge reappears on the other side. Turn it off when the source has real edges, a UI panel, a portrait, and the empty margin should stay transparent instead of repeating.</p>
+<p><strong>Auto crop to opaque</strong> stretches the input's opaque bounding box to fill the canvas first, which helps after an import that left a small sprite adrift in a big transparent frame.</p>
+<p><strong>Quad (perspective)</strong> adds eight corner sliders for a proper four point perspective warp: drag one corner in and the square becomes a trapezoid, a fast way to fake a sign or a screen seen at an angle without a real 3D node.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Offset X %</strong>: -200 .. 200, default 0, keyable</li>
+<li><strong>Offset Y %</strong>: -200 .. 200, default 0, keyable</li>
+<li><strong>Rotate</strong>: 0 .. 359, default 0, keyable</li>
+<li><strong>Scale %</strong>: 1 .. 1000, default 100, keyable</li>
+<li><strong>Scale Y % (0=X)</strong>: 0 .. 1000, default 0, keyable</li>
+<li><strong>Skew X</strong>: -200 .. 200, default 0, keyable</li>
+<li><strong>Skew Y</strong>: -200 .. 200, default 0, keyable</li>
+<li><strong>Wrap (tile)</strong>: on / off, default on, keyable</li>
+<li><strong>Auto crop to opaque</strong>: on / off, default off, keyable</li>
+<li><strong>Quad (perspective)</strong>: on / off, default off, keyable</li>
+<li><strong>Corner TL X %</strong>: -300 .. 300, default 0, only when quad = on, keyable</li>
+<li><strong>Corner TL Y %</strong>: -300 .. 300, default 0, only when quad = on, keyable</li>
+<li><strong>Corner TR X %</strong>: -300 .. 300, default 0, only when quad = on, keyable</li>
+<li><strong>Corner TR Y %</strong>: -300 .. 300, default 0, only when quad = on, keyable</li>
+<li><strong>Corner BR X %</strong>: -300 .. 300, default 0, only when quad = on, keyable</li>
+<li><strong>Corner BR Y %</strong>: -300 .. 300, default 0, only when quad = on, keyable</li>
+<li><strong>Corner BL X %</strong>: -300 .. 300, default 0, only when quad = on, keyable</li>
+<li><strong>Corner BL Y %</strong>: -300 .. 300, default 0, only when quad = on, keyable</li>
+</ul>
+<hr>
+<h2>Safe Transform</h2>
+<p><img src="./gifs/safetransform.gif" alt="Safe Transform demo" width="256" height="256"></p>
+<p><em>Rotates in steps of 90 and shifts half a tile: still tiles, always.</em></p>
+<p>Safe Transform is Transform with the one guarantee it does not have: whatever tiles going in still tiles coming out. <strong>Safe rotation (90)</strong> snaps <strong>Rotation</strong> to the nearest 90 degree step, and <strong>Safe offset (1/2 tile)</strong> snaps <strong>Offset X %</strong> and <strong>Offset Y %</strong> to a half tile increment, so the seam a free rotation or an odd offset would open never opens.</p>
+<p><strong>Tile</strong> sets how many times the source repeats across the canvas before any transform runs, which is what lets a rotation or a mirror land on a whole number of copies instead of slicing one in half.</p>
+<p>I use it in place of Transform whenever the graph feeds a tileable output, and reach for <strong>Mirror X</strong> or <strong>Mirror Y</strong> for a free flip rather than the safety switches, since mirroring never breaks a tile on its own. Turn Safe rotation or Safe offset off only when previewing a deliberate break in the pattern, and switch them back on before export. With both off, this node's rotate and offset behave like Transform's, only clamped to the same eight step, half tile grid, so turning them back on rarely changes the composition, only whether it survives being repeated.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Tile</strong>: 1 .. 8, default 1, keyable</li>
+<li><strong>Rotation</strong>: 0 .. 359, default 0, keyable</li>
+<li><strong>Safe rotation (90)</strong>: on / off, default on, keyable</li>
+<li><strong>Offset X %</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Offset Y %</strong>: -100 .. 100, default 0, keyable</li>
+<li><strong>Safe offset (1/2 tile)</strong>: on / off, default off, keyable</li>
+<li><strong>Mirror X</strong>: on / off, default off, keyable</li>
+<li><strong>Mirror Y</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Mirror</h2>
+<p><img src="./gifs/mirror.gif" alt="Mirror demo" width="256" height="256"></p>
+<p><em>Reflects across the X axis, the Y axis or both.</em></p>
+<p>Mirror reflects the canvas across an axis. <strong>Axis</strong> picks X (left/right), Y (top/bottom) or Quad, which folds both axes into one corner and is the fastest way to turn a quarter of a design into a symmetrical icon or emblem.</p>
+<p>With Axis at X or Y, <strong>Offset %</strong> slides the fold line off centre and <strong>Angle</strong> tilts it, so the reflection does not have to sit on the exact middle: push Offset to 40 and the near side becomes a thin sliver mirrored into a wide one. Quad ignores both, since a corner fold has no single line to move.</p>
+<p>This is the cheapest way to build a symmetrical creature or prop: draw one half by hand or generate it, then mirror on X. It is also how I true up noise before feeding it to Isometric or Nature nodes that expect a balanced silhouette. Because the fold always uses the source pixels on the near side and never blends, the seam is a hard edge rather than a gradient, and shows if the source itself does not read cleanly right up to where the fold lands.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Axis</strong>: X / Y / Quad, default X, keyable</li>
+<li><strong>Offset %</strong>: -100 .. 100, default 0, except when kind = Quad, keyable</li>
+<li><strong>Angle</strong>: 0 .. 179, default 0, except when kind = Quad, keyable</li>
+</ul>
+<hr>
+<h2>Polar</h2>
+<p><img src="./gifs/polar.gif" alt="Polar demo" width="256" height="256"></p>
+<p><em>Goes from cartesian to polar and back, with sides and repeats.</em></p>
+<p>Polar goes from cartesian to polar coordinates or back. To Polar wraps a strip along the X axis around a centre point, which turns a horizontal gradient or noise band into a radial burst, a sun, or a whirlpool. To Cartesian does the opposite: it unrolls a circular pattern into a flat strip, handy for reading a radial gauge or a coin's rim as a straight texture you can edit normally.</p>
+<p><strong>Sides (0=circle)</strong> trades the circle for an N sided polygon outline, from a triangle up to twelve sides, so the same node builds a hex bolt head as easily as a sun. <strong>Repeats</strong> tiles the source around the circle instead of stretching it once, which turns one wedge of pattern into a spoked wheel. <strong>Angle</strong> rotates the whole result, and a mask input limits where the conversion applies, inverted with <strong>Invert mask</strong>.</p>
+<p>I feed this a horizontal noise band for rays or bolts, and a vertical gradient for a coin's beveled rim read back to flat for painting.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Mode</strong>: To Polar / To Cartesian, default To Polar, keyable</li>
+<li><strong>Sides (0=circle)</strong>: 0 .. 12, default 0, keyable</li>
+<li><strong>Repeats</strong>: 1 .. 16, default 1, keyable</li>
+<li><strong>Angle</strong>: 0 .. 359, default 0, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Make It Tile</h2>
+<p><img src="./gifs/maketile.gif" alt="Make It Tile demo" width="256" height="256"></p>
+<p><em>Blends opposite edges with their mirror so the seam disappears.</em></p>
+<p>Make It Tile blends the opposite edges of a texture with their own mirror so the seam disappears without a hand retouch. <strong>Mode</strong> picks Mirror, fold each edge over itself, or Offset, shift the canvas by half and blend across the new centre seam, the classic offset-and-paint-over trick, done automatically. <strong>Axis</strong> limits the blend to X, Y or Both.</p>
+<p><strong>Blend %</strong> is the width of the fade as a percentage of the tile, and it is the one number worth sweeping: too low, under 10, leaves a visible band where the mirrored copy does not quite match the original brushwork; too high, past 60, softens so much of the tile that the middle blurs along with the edge. Something around 20 to 35 reads as an even texture rather than an obviously patched one.</p>
+<p>A mask input limits the blend to where it is wanted, inverted with <strong>Invert mask</strong>, useful when only part of the tile (the ground, say, and not a rock sitting on top of it) needs its edges glued. I run this right before Output on any hand painted tile that was not built with wrapping in mind from the first stroke.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Mode</strong>: Mirror / Offset, default Mirror, keyable</li>
+<li><strong>Axis</strong>: Both / X / Y, default Both, keyable</li>
+<li><strong>Blend %</strong>: 1 .. 100, default 30, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Nine Slice</h2>
+<p><img src="./gifs/nineslice.gif" alt="Nine Slice demo" width="256" height="256"></p>
+<p><em>Stretches a box by its edges and center while respecting the margins.</em></p>
+<p>Nine Slice stretches a UI panel or box by its edges and centre while keeping the corners crisp, the standard nine-patch trick from any UI toolkit. <strong>Left</strong>, <strong>Right</strong>, <strong>Top</strong> and <strong>Bottom</strong> set the margins in source pixels: anything inside them is a corner and is copied untouched, and everything outside is stretched or tiled.</p>
+<p><strong>Width (0=canvas)</strong> and <strong>Height (0=canvas)</strong> set the output size; leave them at 0 to fill the node's own canvas, or type a size to build one panel at several sizes from the same source. <strong>Edges &amp; centre</strong> switches between Stretch, a smooth resize, and Tile, repeat the middle strip instead of stretching it, which keeps a brick or plank pattern from smearing.</p>
+<p><strong>Crop to opaque box</strong> finds the input's opaque bounding box before slicing, which matters when the source panel sits on a larger transparent canvas rather than filling it. A document slice with a defined centre, Aseprite's own 9-slice box, overrides the four margin sliders automatically, so <strong>Margins from slice</strong> picks it up without retyping the numbers by hand.</p>
+<p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Margins from slice</strong>: list, default (empty)</li>
+<li><strong>Left</strong>: 0 .. 64, default 4, keyable</li>
+<li><strong>Right</strong>: 0 .. 64, default 4, keyable</li>
+<li><strong>Top</strong>: 0 .. 64, default 4, keyable</li>
+<li><strong>Bottom</strong>: 0 .. 64, default 4, keyable</li>
+<li><strong>Width (0=canvas)</strong>: 0 .. 256, default 0, keyable</li>
+<li><strong>Height (0=canvas)</strong>: 0 .. 256, default 0, keyable</li>
+<li><strong>Edges &amp; centre</strong>: Stretch / Tile, default Stretch, keyable</li>
+<li><strong>Crop to opaque box</strong>: on / off, default on, keyable</li>
+</ul>
+<hr>
+<h2>Quad Transform</h2>
+<p><img src="./gifs/quadtransform.gif" alt="Quad Transform demo" width="256" height="256"></p>
+<p><em>Stretches the image by taking its four corners wherever you put them.</em></p>
+<p>Quad Transform stretches the image by dragging its four corners wherever you put them, a simpler cousin of Transform's Quad mode with nothing else attached. <strong>TL x %</strong>, <strong>TL y %</strong> and the matching pairs for TR, BR and BL move each corner independently, as a percentage of the canvas, from minus 50 to plus 50.</p>
+<p>Pull one corner in and the image tapers on that side; push two adjacent corners the same way and the whole shape shears. It is the node to reach for to plant a texture on a sign, a book cover, or a screen seen from an angle, without touching rotation or scale directly.</p>
+<p><strong>Keep input outside</strong> decides what shows past the quad's edges: off, the default, leaves that area transparent, on keeps the untouched input showing through, which matters when the quad only needs to warp part of the frame and the rest should stay put. A mask input restricts the warp to part of the canvas, inverted with <strong>Invert mask</strong>, for a partial distortion over a background that should not move.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>TL x %</strong>: -50 .. 50, default 0, keyable</li>
+<li><strong>TL y %</strong>: -50 .. 50, default 0, keyable</li>
+<li><strong>TR x %</strong>: -50 .. 50, default 0, keyable</li>
+<li><strong>TR y %</strong>: -50 .. 50, default 0, keyable</li>
+<li><strong>BR x %</strong>: -50 .. 50, default 0, keyable</li>
+<li><strong>BR y %</strong>: -50 .. 50, default 0, keyable</li>
+<li><strong>BL x %</strong>: -50 .. 50, default 0, keyable</li>
+<li><strong>BL y %</strong>: -50 .. 50, default 0, keyable</li>
+<li><strong>Keep input outside</strong>: on / off, default off, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+<hr>
+<h2>Symmetry</h2>
+<p><img src="./gifs/symmetry.gif" alt="Symmetry demo" width="256" height="256"></p>
+<p><em>Repeats one sector around the center, mirrored or in slices.</em></p>
+<p>Symmetry repeats one sector of the canvas around the centre, either mirrored (Kaleidoscope) or copied without mirroring (Slice). <strong>Sectors</strong> sets how many wedges make up the full circle, from 2 up to 16: low counts read as a simple mandala or flower, high counts blur into a fine radial texture.</p>
+<p><strong>Mode</strong> is the difference between a kaleidoscope, where every other wedge flips so the pattern reads as continuous across each seam, and Slice, where the same wedge repeats untouched and the seams stay visible cuts, useful for a pie chart or a paddle wheel rather than an ornament.</p>
+<p><strong>Angle</strong> rotates which part of the source lands at the top of the first wedge, which matters because the whole pattern is built from whatever sits along that one slice: move Angle to catch the most interesting part of a noisy or generated source before committing to the repeat. A mask input and <strong>Invert mask</strong> limit where the effect runs.</p>
+<p>I run this on noise or a generator output to build round emblems, gems and rune circles, since one seed and one angle sweep gives a full family of variations without redrawing anything by hand.</p>
+<p><strong>In:</strong> In (image), Mask (image) &middot; <strong>Out:</strong> image</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>Sectors</strong>: 2 .. 16, default 6, keyable</li>
+<li><strong>Mode</strong>: Kaleidoscope / Slice, default Kaleidoscope, keyable</li>
+<li><strong>Angle</strong>: 0 .. 359, default 0, keyable</li>
+<li><strong>Invert mask</strong>: on / off, default off, keyable</li>
+</ul>
+
+</body>
+</html>
