@@ -246,7 +246,7 @@
 </ul>
 <hr>
 <h2 id="palsheet">Palette Sheet</h2>
-<p><img src="./graphs/palsheet.gif" alt="Palette Sheet node graph" width="596" height="322"></p>
+<p><img src="./graphs/palsheet.gif" alt="Palette Sheet node graph" width="608" height="322"></p>
 <p><strong>Draws a palette as swatches: one row, or a grid of N columns.</strong></p>
 <p>Draws a palette as a picture of itself, in one of three readings depending on <strong>Columns</strong> and <strong>Cell px</strong>. Both at zero (the default) draws the classic single-row strip, the same thing a palette used to be before this category existed, and it is the only path that honours a <code>smooth</code> list, since a grid of hard swatches has no way to blend between cells.</p>
 <p>Set <strong>Cell px</strong> to a fixed size and <strong>Columns</strong> to 0 and you get one row of fixed swatches, the reading Lospec's own palette PNGs use. Give <strong>Columns</strong> a real number and the sheet reflows into a grid of that width, which is how a reference sheet for a whole project usually looks. <strong>Gap px</strong> adds space between cells, <strong>Background</strong> colours whatever shows in the gaps and around the edges, and <strong>Border</strong> draws one pixel of background around every swatch at any render size, a grid line rather than a percentage. I keep one of these wired to a project's master palette purely as a legend, dropped in the corner of a reference sheet.</p>

@@ -19,7 +19,7 @@
 <p>Most of these sit late in a graph, right before an Output, tightening what a Noise or a Pattern generated into something with real pixel-art contrast. A lot of them take an optional Mask input too: wire one in and the effect only lands where the mask is bright, with an Invert mask checkbox to flip that reading. I reach for Levels and Quantize the most; the rest earn their slot once you need to match a reference palette or fix a specific color.</p>
 <hr>
 <h2 id="invert">Invert</h2>
-<p><img src="./graphs/invert.gif" alt="Invert node graph" width="714" height="288"></p>
+<p><img src="./graphs/invert.gif" alt="Invert node graph" width="738" height="288"></p>
 <p><strong>Flips every color channel: what was white turns black.</strong></p>
 <p>Flips red, green and blue; alpha is left alone. There is nothing to configure, which is the point: it is a one-click negative you drop in to sanity-check a mask (does the bright side match what I expect) or to turn a &quot;distance from edge&quot; map into a &quot;distance from center&quot; one without touching Levels.</p>
 <p>Plug it straight after a Threshold or a Distance node when the black/white sides came out backwards, instead of hunting for an Invert checkbox on the upstream node (not every node has one). Wire a Mask into it and only the masked area gets negated, which is a quick way to invert one color region of a sprite while leaving the rest alone.</p>
@@ -54,7 +54,7 @@
 </ul>
 <hr>
 <h2 id="curve">Curve</h2>
-<p><img src="./graphs/curve.gif" alt="Curve node graph" width="714" height="288"></p>
+<p><img src="./graphs/curve.gif" alt="Curve node graph" width="738" height="288"></p>
 <p><strong>Remaps tones with a point graph you draw yourself.</strong></p>
 <p>A freeform tonal remap: you draw the curve directly on the node instead of typing in five numbers, and it applies the same result to red, green and blue. There is nothing to set in the parameter list because the shape of the curve is the whole parameter.</p>
 <p>Reach for this over Levels when the fix is not a straight gamma bend, an S-curve for extra punch in the midtones with the black and white points held, or a deliberate crush at one end. I use it after Gradient Map more than before it: gradmap already assigns the colors, Curve then adjusts how much of the image sits in the bright versus dark stops of that ramp. Because it works on luminance per channel and not on hue, a strong curve can shift color balance as a side effect, which is sometimes the point and sometimes not.</p>
@@ -140,7 +140,7 @@
 </ul>
 <hr>
 <h2 id="gradmap">Gradient Map</h2>
-<p><img src="./graphs/gradmap.gif" alt="Gradient Map node graph" width="714" height="350"></p>
+<p><img src="./graphs/gradmap.gif" alt="Gradient Map node graph" width="738" height="350"></p>
 <p><strong>Swaps each tone for the color it lands on in a ramp.</strong></p>
 <p>Swaps each tone for the color it lands on along a ramp. Wire an image into the <strong>Ramp</strong> input and it reads that image's middle row as the gradient, palette or plain color strip alike, so any node that produces a strip of color can drive this one.</p>
 <p>This is the node I reach for once a shape or a height field is finished and needs its final colors: a Bevel's height output straight into Gradient Map's In, a hand-picked ramp into Ramp, done. Because the ramp comes from an actual image rather than two fixed colors, swapping which Ramp is wired in is the fastest way to reskin the same shape into a different material. Feed it a one-pixel-tall strip if you want an exact, non-interpolated set of stops rather than a smooth gradient.</p>

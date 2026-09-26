@@ -19,7 +19,7 @@
 <p>Everything here wraps by default, so an offset that pushes a texture past the right edge brings it back on the left, the behaviour a tileable texture needs. Three of the eight, Safe Transform, Make It Tile and Symmetry, exist only to protect that result: each guarantees the edges still match after the transform runs, rather than leaving it to luck.</p>
 <hr>
 <h2 id="transform">Transform</h2>
-<p><img src="./graphs/transform.gif" alt="Transform node graph" width="808" height="322"></p>
+<p><img src="./graphs/transform.gif" alt="Transform node graph" width="830" height="322"></p>
 <p><strong>Moves, rotates, scales and shears, with wrapping or clipping to the opaque area.</strong></p>
 <p>Transform is the general purpose move: offset, rotate, scale, skew, and with Quad on, a four corner perspective pull, all in one node instead of three chained together.</p>
 <p><strong>Offset X %</strong> and <strong>Offset Y %</strong> move as a percentage of the canvas, so the same node works at 16 px and at 256 px without retyping a pixel count. <strong>Rotate</strong> turns around the centre, and <strong>Scale %</strong> with <strong>Scale Y % (0=X)</strong> left at zero scales evenly; give Scale Y a value of its own to squash or stretch one axis, useful for turning a round emitter core into an oval one.</p>

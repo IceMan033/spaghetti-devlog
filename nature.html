@@ -175,7 +175,7 @@
 </ul>
 <hr>
 <h2 id="natfoliate">Foliate</h2>
-<p><img src="./graphs/natfoliate.gif" alt="Foliate node graph" width="244" height="344"></p>
+<p><img src="./graphs/natfoliate.gif" alt="Foliate node graph" width="254" height="344"></p>
 <p><strong>Hangs leaves along a skeleton and on its tips, alternate, opposite or whorled.</strong></p>
 <p>Leaves hung along a <strong>Skeleton</strong>, or on its tips, or both, set by <strong>Where</strong>. <strong>Phyllotaxis</strong> decides how many leaves sit at each station along the branch: Alternate is one leaf per station switching sides, Opposite is a pair facing each other, Whorled is three around the stem. Real plants use exactly this vocabulary, and switching it is the fastest way to make the same skeleton read as two different species.</p>
 <p><strong>Spacing %</strong> only matters when leaves run <strong>Along</strong> a branch rather than sitting only at the <strong>Tips</strong>. <strong>Size by depth %</strong> shrinks leaves further out on the skeleton relative to ones near the trunk, which reads as perspective on a tree crown even at a flat pixel scale. <strong>Mirror alternate</strong> flips every other leaf so an alternate arrangement does not repeat the exact same silhouette down the stem.</p>
@@ -241,7 +241,7 @@
 </ul>
 <hr>
 <h2 id="nathorizon">Horizon</h2>
-<p><img src="./graphs/nathorizon.gif" alt="Horizon node graph" width="244" height="300"></p>
+<p><img src="./graphs/nathorizon.gif" alt="Horizon node graph" width="254" height="300"></p>
 <p><strong>Carves a skyline of hills, ridges, dunes or terraces, tileable and layered for parallax.</strong></p>
 <p>A skyline as a pure function, one height per column, never two, which is what makes an aliased Fill of it a proper silhouette instead of an overhang. <strong>Mode</strong> picks the character: Hills is rounded fBm noise, Mountains folds it at the midpoint so every ridge gets a sharp corner (a peak, not a bump), Dunes warps the domain by its own value so crests lean and the faces they push into steepen, and Cliffs quantizes into <strong>Steps</strong> flat terraces.</p>
 <p><strong>Parallax layer</strong> is not cosmetic: stack several Horizon nodes on the same <strong>Seed</strong> with <strong>Parallax layer</strong> 0, 1, 2 and they read as one landscape at different distances, each layer's amplitude and detail scaled down automatically rather than as unrelated noise. <strong>Tile in X</strong> keeps the profile's two edges matching for a scrolling background.</p>
@@ -262,7 +262,7 @@
 </ul>
 <hr>
 <h2 id="natrock">Rock</h2>
-<p><img src="./graphs/natrock.gif" alt="Rock node graph" width="244" height="300"></p>
+<p><img src="./graphs/natrock.gif" alt="Rock node graph" width="266" height="300"></p>
 <p><strong>Swells a polygon into a boulder with two octaves of noise, then breaks it into facets.</strong></p>
 <p>A regular polygon (<strong>Sides</strong>) melts into a boulder as <strong>Roughness %</strong> rises, two octaves of noise doing the melting; <strong>Detail %</strong> is the amplitude of the finer of the two, so it adds crumble rather than the big lumps roughness gives. <strong>Flatten %</strong> squashes the whole rock and <strong>Jagged %</strong> sharpens its silhouette between rounded and chipped.</p>
 <p><strong>Part</strong> matters more than it looks: Silhouette is a normal filled shape, but Facets and Cracks both come out as lines (a Voronoi cell split and a network of cracks), so they want a Stroke rather than a Fill, a zero-area contour filled is nothing. <strong>Facets</strong> sets how many cells the Voronoi split makes, <strong>Crack amount %</strong> how much of that network shows when <strong>Part</strong> is Cracks.</p>

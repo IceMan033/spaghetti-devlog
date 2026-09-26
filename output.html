@@ -19,7 +19,7 @@
 <p>All of the sheet builders share the same two templates, Wang 16, edges only, and Blob 47, edges and corners, 47 variants, and the same border treatment knobs, so switching from Autotile to Tileset Builder halfway through a graph does not mean relearning a new set of sliders.</p>
 <hr>
 <h2 id="output">Output</h2>
-<p><img src="./graphs/output.gif" alt="Output node graph" width="714" height="288"></p>
+<p><img src="./graphs/output.gif" alt="Output node graph" width="738" height="288"></p>
 <p><strong>Closes the graph: whatever arrives here is the result you see.</strong></p>
 <p>Output closes the graph: whatever arrives on its one input is the result you see on the canvas and the result any export reads. It has no parameters at all, since its only job is to mark the end of the chain.</p>
 <p>Every graph needs exactly one to produce anything, though the editor tolerates more than one loose Output sitting around unconnected while you work. When a graph also carries an Autotile, Tileset Builder or Dungeon node, Output still matters: it is the fallback base texture for the sheet builders when no Export Slot has claimed that role, which is what lets the plain case, one Output and no slots at all, still export a full tileset sheet with no extra wiring.</p>
@@ -27,7 +27,7 @@
 <p><strong>In:</strong> In (image) &middot; <strong>Out:</strong> -</p>
 <hr>
 <h2 id="autotile">Autotile</h2>
-<p><img src="./graphs/autotile.gif" alt="Autotile node graph" width="714" height="288"></p>
+<p><img src="./graphs/autotile.gif" alt="Autotile node graph" width="738" height="288"></p>
 <p><strong>Cuts a base texture into the pieces of a self-connecting tileset.</strong></p>
 <p>Autotile cuts one base texture into the pieces of a self-connecting tileset by synthesising the border, rather than compositing pieces you draw yourself, that is Tileset Builder's job instead. <strong>Tileset</strong> picks the layout: Wang 16, edges only, a 4x4 sheet, or Blob 47, edges and corners, 47 variants on an 8x6 sheet with one empty cell, the same 47-variant set Godot, Tiled and RPG Maker all use.</p>
 <p><strong>Top light</strong>, <strong>Side shade</strong> and <strong>Bottom shade</strong> are the shading that actually makes the cut pieces read as a volume instead of the same texture with chunks removed: with all three at 0, the sheet is honest about what it is doing, one tile with parts cut away, which is exactly what a real tileset is not. <strong>Edge band</strong> sets how many pixels deep that shading reaches from each open edge.</p>
@@ -49,7 +49,7 @@
 </ul>
 <hr>
 <h2 id="tilesetbuild">Tileset Builder</h2>
-<p><img src="./graphs/tilesetbuild.gif" alt="Tileset Builder node graph" width="682" height="856"></p>
+<p><img src="./graphs/tilesetbuild.gif" alt="Tileset Builder node graph" width="706" height="856"></p>
 <p><strong>Composes a tileset from the edge pieces you draw one by one.</strong></p>
 <p>Tileset Builder composes a tileset from the pieces you draw and wire in yourself, with zero synthesis: nothing here invents a pixel the way Autotile's shading does. The Base input is the only required one; Top, Bottom, Left, Right, Outer and Inner are the edge and corner pieces, each a full tile whose alpha is read as its own silhouette, which is how a grass tuft or a rock overhang gets into the sheet, a shape no shading model could invent.</p>
 <p>The two corner inputs read by quadrant: draw the Outer piece as one loose island shape and its four corners land in the sheet's four convex corners; leave it unwired and the two adjacent edge pieces overlap instead, the plain composite result. Inner works the same way for concave corners.</p>
@@ -65,7 +65,7 @@
 </ul>
 <hr>
 <h2 id="dungeonbuild">Dungeon</h2>
-<p><img src="./graphs/dungeonbuild.gif" alt="Dungeon node graph" width="714" height="496"></p>
+<p><img src="./graphs/dungeonbuild.gif" alt="Dungeon node graph" width="738" height="496"></p>
 <p><strong>Builds a dungeon tileset with floor, wall face and capping.</strong></p>
 <p>Dungeon builds a wall as a volume rather than a flat tile, the RPG Maker A4 model: a wall is a cap seen from above plus a front face plus a floor, not one rectangle repeated. The Wall top input is required, an ordinary Blob 47 cap, 47 variants; Wall face and Floor are optional.</p>
 <p>Without a Wall face, the node derives one from the top automatically, darkened along a vertical ramp from 45% at the top edge to full brightness at the base, never fully dark at the top or the face reads as a hole rather than a wall. That is what lets a whole dungeon tileset come out of a single tile, the same trick Autotile plays with its own shading.</p>
@@ -88,7 +88,7 @@
 </ul>
 <hr>
 <h2 id="exportslot">Export Slot</h2>
-<p><img src="./graphs/exportslot.gif" alt="Export Slot node graph" width="714" height="288"></p>
+<p><img src="./graphs/exportslot.gif" alt="Export Slot node graph" width="738" height="288"></p>
 <p><strong>Tags a branch with a role so the tileset exporter reads it.</strong></p>
 <p>Export Slot tags a branch of the graph with a role so the tileset exporter, Autotile, Tileset Builder or Dungeon, knows which texture is which without needing a fixed number of input sockets on those nodes themselves. <strong>Role</strong> picks Base, Edge, Top, Sides or Bottom.</p>
 <p>Drop several of these around a graph, one per texture that a tileset needs beyond the plain base, wire each one to whatever branch produces that texture, and the sheet builder downstream picks them up automatically, no need to route every texture into one node's input list by hand. Two slots claiming the same role is not an error, only a note in the panel; the older one, created first, wins, which mostly matters if a slot gets duplicated by accident while editing.</p>

@@ -53,7 +53,7 @@
 </ul>
 <hr>
 <h2 id="frameskip">Frame Step</h2>
-<p><img src="./graphs/frameskip.gif" alt="Frame Step node graph" width="714" height="288"></p>
+<p><img src="./graphs/frameskip.gif" alt="Frame Step node graph" width="738" height="288"></p>
 <p><strong>Skips one frame in every N, or holds them to animate on twos.</strong></p>
 <p>Two ways to change which frames of a sequence get played, and they answer different questions. <strong>Mode</strong> <code>Skip</code> drops frames outright: <strong>Every Nth</strong> at 3 on a 30-frame walk leaves 10 frames, shorter and visibly choppier at the same fps, useful when a source was captured or generated at a higher rate than the final art needs. <code>Hold</code> keeps the original length but repeats every Nth frame instead of dropping anything, the classic animate-on-twos or animate-on-threes look, without changing how long the loop takes to play.</p>
 <p><strong>Phase</strong> offsets which frames are kept or held (0-7), which matters once you have two sequences on Skip or Hold at the same step and want them out of sync with each other rather than landing on identical frames every time.</p>
@@ -67,7 +67,7 @@
 </ul>
 <hr>
 <h2 id="playback">Playback</h2>
-<p><img src="./graphs/playback.gif" alt="Playback node graph" width="714" height="288"></p>
+<p><img src="./graphs/playback.gif" alt="Playback node graph" width="738" height="288"></p>
 <p><strong>Plays backwards, ping-pong, repeated, or freezes one frame.</strong></p>
 <p>Sequence surgery on an existing animation: this node doesn't generate anything, it rearranges frames that are already there. <strong>Mode</strong> <code>Reverse</code> flips the order outright. <code>Ping-Pong</code> plays forward then back without doubling the two end frames, so a loop of a swinging lantern doesn't stutter at the top and bottom of its arc. <code>Repeat</code> concatenates the whole sequence <strong>Repeat times</strong> (1-8) over, which is mostly useful right before Frame Blend or Echo, both of which read across frame boundaries and behave better with more material to work from. <code>Freeze</code> is the odd one out: it picks a single <strong>Freeze frame</strong> and returns it as a plain static image, the bridge back into the ordinary non-animated pipeline when you only needed one pose out of a whole walk cycle.</p>
 <p>I reach for Ping-Pong far more than Reverse on its own; a straight reverse rarely reads as natural motion, but a there-and-back cycle covers a lot of ambient animation (a flag, a hanging sign, an idle breathing loop) with one extra click.</p>
@@ -80,7 +80,7 @@
 </ul>
 <hr>
 <h2 id="speed">Speed</h2>
-<p><img src="./graphs/speed.gif" alt="Speed node graph" width="714" height="288"></p>
+<p><img src="./graphs/speed.gif" alt="Speed node graph" width="738" height="288"></p>
 <p><strong>Stretches or shrinks the sequence duration by a percentage.</strong></p>
 <p>Retimes a sequence by a percentage, picking the nearest existing frame rather than blending between two, because pixel art doesn't hold up to motion blur. <strong>Speed %</strong> (10-400) at 200 halves the frame count outright; at 50 it doubles it by repeating frames rather than inventing new ones, so slowing down never gets smoother than the source actually is, only longer. <strong>FPS</strong> overrides the output clock when it isn't 0; left at 0 it keeps whatever the source's own fps was.</p>
 <p>This is the node to use when a Motion or Anim Source sequence plays back faster or slower than the rest of a scene needs, without touching whatever built it in the first place. If you actually need smoother slow motion rather than only longer, that's Frame Blend's job instead, since this node deliberately never invents an in-between frame.</p>
@@ -92,7 +92,7 @@
 </ul>
 <hr>
 <h2 id="timeoffset">Time Offset</h2>
-<p><img src="./graphs/timeoffset.gif" alt="Time Offset node graph" width="714" height="288"></p>
+<p><img src="./graphs/timeoffset.gif" alt="Time Offset node graph" width="738" height="288"></p>
 <p><strong>Rotates the sequence start by N frames, wrapping around the end.</strong></p>
 <p>Rotates where a looping sequence starts, wrapping past the end back to the beginning, without changing anything about the motion itself. <strong>Shift frames</strong> (-32 to 32) is the only knob: shift by half the sequence's length and frame 1 becomes whatever used to be the midpoint.</p>
 <p>The whole point of this node is instant desynchronization between two copies of the same animation. Feed the same Motion-driven flame or the same Echo trail into two sprites on a wall, offset one of them by a handful of frames, and they stop looking like a single pattern copy-pasted twice. It's a one-parameter node and it earns its place in the folder entirely on that trick: without it, every duplicated animated element in a scene ticks in lockstep, and that reads as artificial faster than almost anything else does.</p>
@@ -103,7 +103,7 @@
 </ul>
 <hr>
 <h2 id="echo">Echo</h2>
-<p><img src="./graphs/echo.gif" alt="Echo node graph" width="714" height="288"></p>
+<p><img src="./graphs/echo.gif" alt="Echo node graph" width="738" height="288"></p>
 <p><strong>Leaves a trail of the previous frames, each one fainter.</strong></p>
 <p>An onion-skin trail: every output frame carries a fading copy of the frames that came before it, baked directly into the pixels rather than as an editor overlay. <strong>Ghosts</strong> (1-8) sets how many previous frames get layered in behind the current one, and <strong>Decay</strong> (10-90) is how much each step back fades, compounding, so a Decay of 50 with 3 Ghosts leaves the most recent ghost at half strength, the one before that at a quarter, and so on.</p>
 <p>Because the ghost indices wrap around the sequence, the trail already exists correctly on frame 1, there's no fade-in at the start of the loop the way a naive implementation would have. This is the node for a sword swing, a dash, or anything with fast linear motion that needs a speed-line trail; it reads worse on anything that changes direction, since the ghosts pile up in whichever direction the source was moving a moment ago rather than where it's headed.</p>
@@ -115,7 +115,7 @@
 </ul>
 <hr>
 <h2 id="frameblend">Frame Blend</h2>
-<p><img src="./graphs/frameblend.gif" alt="Frame Blend node graph" width="714" height="288"></p>
+<p><img src="./graphs/frameblend.gif" alt="Frame Blend node graph" width="738" height="288"></p>
 <p><strong>Interleaves new frames by crossfading each pair, and multiplies the fps.</strong></p>
 <p>Generates real in-between frames by crossfading each pair of neighbours, which is different from what Speed does: this node invents new frames instead of only picking from the ones that exist. <strong>Smoothness x</strong> (2-8) is how many frames replace each single source frame; at 2 every original frame gets one interpolated frame inserted after it, at 8 it gets seven. The output fps multiplies along with the frame count, capped at 60, so the wall-clock duration of the loop holds steady until the ceiling forces it to run faster.</p>
 <p>This is the node for turning a rough 4 or 8-frame animation into something that reads as smooth without hand-drawing more frames, at the cost of the crossfade itself being visible if you look for it (a form of motion blur, in effect). I use it on background elements and effects more than on a character's main pose changes, where the blur between two held poses tends to look wrong rather than fluid.</p>
@@ -126,7 +126,7 @@
 </ul>
 <hr>
 <h2 id="timewarp">Time Warp</h2>
-<p><img src="./graphs/timewarp.gif" alt="Time Warp node graph" width="714" height="350"></p>
+<p><img src="./graphs/timewarp.gif" alt="Time Warp node graph" width="738" height="350"></p>
 <p><strong>Delays each pixel by where it sits: a wave, a radius or a mask.</strong></p>
 <p>Delays each pixel of a sequence by a different amount, turning a uniform loop into something that ripples across the image instead of moving all at once. <strong>Pattern</strong> picks the spatial rule: <code>Wave X</code> and <code>Wave Y</code> delay by a sine wave across that axis, with <strong>Waves</strong> (1-8) setting how many full cycles fit across the image so the pattern still tiles; <code>Radial</code> delays by distance from the centre outward; <code>Map</code> reads the luminance of a second wired input instead, so any generator or hand-painted mask can drive the stagger directly.</p>
 <p><strong>Max delay</strong> (-32 to 32) is the biggest gap in frames between the earliest and latest pixel; the sign flips which end of the pattern lags behind. This is the node that turns a plain Motion pulse into wind moving through grass, or a flat scroll into water with a current, and the Map mode is worth building a dedicated noise or gradient graph for rather than reusing whatever's already at hand, since the mask is read once from its first frame even if it's animated itself.</p>
@@ -139,7 +139,7 @@
 </ul>
 <hr>
 <h2 id="animoutput">Anim Output</h2>
-<p><img src="./graphs/animoutput.gif" alt="Anim Output node graph" width="714" height="288"></p>
+<p><img src="./graphs/animoutput.gif" alt="Anim Output node graph" width="738" height="288"></p>
 <p><strong>Closes the animation and exports it to GIF, frames, a sheet or the sprite.</strong></p>
 <p>The terminal node of the category, where a finished sequence is held for whatever reads it next: the live preview, and the exporters that turn it into a GIF, a folder of frame images, a sprite sheet, or frames applied straight back onto the open sprite. Like Output in the main pipeline it's a singleton the graph keeps exactly one of, but unlike Output it can be deleted and re-added, since a graph without one isn't ready to export yet rather than being broken.</p>
 <p><strong>Tag the frames on apply</strong> (on by default) decides whether applying the result back to the sprite also wraps the new frames in an Aseprite tag, which is worth turning off if you're laying frames onto an existing animation rather than starting a fresh one, since a second tag on top of frames that already belong to one adds clutter to the tag list for no reason. If a static image reaches this node instead of a sequence, it passes through as a one-frame result rather than erroring, which is what makes it safe to leave connected while you're still building the animated part of a graph upstream.</p>

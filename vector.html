@@ -85,7 +85,7 @@
 </ul>
 <hr>
 <h2 id="vecstroke">Stroke</h2>
-<p><img src="./graphs/vecstroke.gif" alt="Stroke node graph" width="536" height="344"></p>
+<p><img src="./graphs/vecstroke.gif" alt="Stroke node graph" width="548" height="344"></p>
 <p><strong>Strokes the shape by expanding it to a fill: width, caps, joins, dashes and pixel perfect.</strong></p>
 <p>Expands a shape's outline into a band and paints it, with the same vocabulary a vector editor uses: <strong>Align</strong> (Center, Inside, Outside), <strong>Cap</strong> (Butt, Square, Round), <strong>Join</strong> (Miter, Round, Bevel, with <strong>Miter limit</strong> only mattering for Miter joins), plus <strong>Dashed</strong> with <strong>Dash px</strong>, <strong>Gap px</strong> and <strong>Dash offset px</strong> once it is switched on. <strong>Taper %</strong> thins the stroke toward its ends, which reads as a hand-drawn mark rather than a ruled line at higher values.</p>
 <p><strong>Pixel perfect</strong> matters specifically at <strong>Thickness px</strong> 1 with an Aliased edge, it is what keeps a one-pixel stroke from dropping to half a pixel at a shallow diagonal, the case a paint program's own pencil tool has to solve the same way. Leave it on unless you have a specific reason to turn it off.</p>
@@ -110,7 +110,7 @@
 </ul>
 <hr>
 <h2 id="vecoutline">Outline</h2>
-<p><img src="./graphs/vecoutline.gif" alt="Outline node graph" width="536" height="322"></p>
+<p><img src="./graphs/vecoutline.gif" alt="Outline node graph" width="548" height="322"></p>
 <p><strong>Turns the stroke into a shape, to fill it, combine it or subtract it as one more contour.</strong></p>
 <p>The same expansion Stroke draws, handed back as a <code>shape</code> instead of painted, which is Illustrator's &quot;outline stroke&quot;: the moment a line stops being a property of a shape and becomes a shape of its own. That makes it fillable, combinable with Combine, offset, repeated or exported to SVG, none of which a painted Stroke can do afterward.</p>
 <p>All the geometry rows (<strong>Thickness px</strong>, <strong>Align</strong>, <strong>Cap</strong>, <strong>Join</strong>, <strong>Miter limit</strong>, <strong>Taper %</strong>, the three dash rows) are the identical parameters Stroke uses, on purpose, so a test that fills an Outline and compares it against a Stroke of the same settings is holding a real promise rather than hoping the two look close. Reach for this over Stroke whenever the stroke needs to be combined with something else before it is filled, an outline plus a badge silhouette unioned together, for instance, rather than drawn as a separate pass on top.</p>
@@ -254,7 +254,7 @@
 </ul>
 <hr>
 <h2 id="vecsimplify">Simplify</h2>
-<p><img src="./graphs/vecsimplify.gif" alt="Simplify node graph" width="526" height="322"></p>
+<p><img src="./graphs/vecsimplify.gif" alt="Simplify node graph" width="536" height="322"></p>
 <p><strong>Drops redundant points from the shape, fits curves on request and snaps anchors to the grid.</strong></p>
 <p>Drops anchors a shape does not need, <strong>Simplify px</strong> the tolerance a point can move before it is considered redundant, <strong>Fit: Curves</strong> (with <strong>Fit error px</strong>) turning the remaining polyline into proper cubic curves instead of straight segments between the kept points. <strong>Snap</strong> (Off / Pixel / Half pixel) rounds anchors onto the grid afterward, which is worth turning on before an Export SVG of something meant to read as crisp pixel art rather than as slightly-off-grid vector art.</p>
 <p><strong>Detail px</strong> is the resolution a lazy shape gets landed at before this node can measure it, the same row Combine, Wind and Trim all carry for the same reason. At small values (under 5 or so) a well-simplified shape looks unchanged, since that is exactly what a clean trace or a Vector Primitive should look like already, the effect shows on a noisy or over-sampled contour.</p>

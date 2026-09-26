@@ -284,7 +284,7 @@
 </ul>
 <hr>
 <h2 id="cluster">Cluster</h2>
-<p><img src="./graphs/cluster.gif" alt="Cluster node graph" width="652" height="322"></p>
+<p><img src="./graphs/cluster.gif" alt="Cluster node graph" width="664" height="322"></p>
 <p><strong>Merges colour islands smaller than N pixels into their neighbours: clusters, not noise. After a Quantize.</strong></p>
 <p>Merges same-color islands into whichever bordering color has the most contact with them. <strong>Mode</strong> <strong>Islands</strong> targets any island smaller than <strong>Min size (px)</strong>; <strong>Specks</strong> instead targets single-pixel islands only, regardless of Min size; <strong>Both</strong> does either. <strong>Passes</strong> repeats the merge, since a sliver that survives one pass, now bordered by a different color than before, can still be small enough to go on the next. <strong>Budget (islands)</strong> is a safety limit: past that many separate color components the entire input comes back untouched, since an image with that many islands is noise rather than clusters and this node is not built to fix that.</p>
 <p>Run this right after a Quantize or a Palette node; dithering and posterizing both leave a scatter of single stray pixels at color boundaries, and one Cluster pass with a small Min size folds them back into flat regions.</p>

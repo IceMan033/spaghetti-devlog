@@ -72,7 +72,7 @@
 </ul>
 <hr>
 <h2 id="shadow">Shadow</h2>
-<p><img src="./graphs/shadow.gif" alt="Shadow node graph" width="432" height="322"></p>
+<p><img src="./graphs/shadow.gif" alt="Shadow node graph" width="454" height="322"></p>
 <p><strong>From a height map, casts the drop shadow the lamp angle throws on lower ground.</strong></p>
 <p>Shadow reads a height map and casts the drop shadow the lamp throws on lower ground nearby, different from Light's shading since this is occlusion between features rather than the slope of one surface. <strong>Angle</strong> and <strong>Elevation</strong> share the same convention as Light's directional lamp, so the two usually get matching values to keep the cast shadow consistent with the surface shading.</p>
 <p><strong>Height (px)</strong> and <strong>Ray length (px)</strong> set how tall the features are and how far the shadow ray searches for something to fall on; a low sun, <strong>Elevation</strong> near 0, with a long <strong>Ray length (px)</strong> throws long shadows across a whole tile, a high sun with a short one keeps them tucked under each bump.</p>
@@ -125,7 +125,7 @@
 </ul>
 <hr>
 <h2 id="normaltoheight">Normal to Height</h2>
-<p><img src="./graphs/normaltoheight.gif" alt="Normal to Height node graph" width="620" height="322"></p>
+<p><img src="./graphs/normaltoheight.gif" alt="Normal to Height node graph" width="630" height="322"></p>
 <p><strong>Rebuilds the height that normal map would produce, by integrating it.</strong></p>
 <p>Normal to Height runs the opposite of the Normal node: it rebuilds the height field that would have produced a given normal map, by integrating the map's slopes back into a surface. There is one control that really matters, <strong>Iterations</strong>, because the integration is iterative, a Poisson solve, rather than a closed form.</p>
 <p>Low iteration counts, under 50, converge to something rough, workable for a quick preview but visibly unsettled, especially in the middle of a large flat area. Past 100 the result stabilises; the default of 48 is a working compromise, and I bump it to 100 or more only when the reconstructed height still shows a visible gradient where it should be flat.</p>
@@ -138,7 +138,7 @@
 </ul>
 <hr>
 <h2 id="pixbevel">Pixel Bevel</h2>
-<p><img src="./graphs/pixbevel.gif" alt="Pixel Bevel node graph" width="432" height="344"></p>
+<p><img src="./graphs/pixbevel.gif" alt="Pixel Bevel node graph" width="442" height="344"></p>
 <p><strong>Lights one edge of a mask and shadows the opposite one, a pixel at a time.</strong></p>
 <p>Pixel Bevel lights one edge of a mask and shadows the opposite one, a pixel at a time rather than as a smooth gradient, which is what makes it read as a pixel art bevel instead of a rendered one. <strong>Light from</strong> sets the direction, the same convention as Shade and Light.</p>
 <p><strong>Lit (px)</strong> sets how many rings deep the lit side reaches, and <strong>Shadow (px, 0 = lit)</strong> does the same for the dark side, defaulting to match Lit when left at 0. <strong>Inner (px)</strong> pushes both bands in from the very edge, exactly like Shade's Inner band, for leaving a hand-drawn outline untouched. Each ring is one pixel deep and rendered as its own flat tone rather than blended, and <strong>Output</strong> can hand back one ring alone, Lit ring or Dark ring, instead of the full union, which is how a thin shape like tall grass gets its blade tips picked out separately from its base.</p>

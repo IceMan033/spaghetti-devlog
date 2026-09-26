@@ -230,7 +230,7 @@
 </ul>
 <hr>
 <h2 id="isoterrain">Iso Terrain</h2>
-<p><img src="./graphs/isoterrain.gif" alt="Iso Terrain node graph" width="410" height="480"></p>
+<p><img src="./graphs/isoterrain.gif" alt="Iso Terrain node graph" width="434" height="480"></p>
 <p><strong>Raises an isometric column per cell, with slopes, water and textured lids.</strong></p>
 <p>Iso Terrain raises an isometric column per cell of a height map, the node that turns a height field into actual ground rather than a flat floor. The wired height map is read as luminance per cell and <strong>Terraces</strong> steps it into that many flat plateaus; a cell whose height pixel is fully transparent is skipped entirely, which is how you punch a hole or a cliff edge straight into the field.</p>
 <p><strong>Slopes</strong> turns the hard steps between terraces into ramps, at <strong>Slope height %</strong> of a full level, for rolling ground instead of a staircase of plateaus. <strong>Water level</strong> floods every cell below that terrace with the <strong>Water</strong> colour, and above the water line the terrain reads as usual, so a single node gives a lake sitting inside a landscape.</p>
@@ -259,7 +259,7 @@
 </ul>
 <hr>
 <h2 id="isotileset">Iso Tileset</h2>
-<p><img src="./graphs/isotileset.gif" alt="Iso Tileset node graph" width="478" height="344"></p>
+<p><img src="./graphs/isotileset.gif" alt="Iso Tileset node graph" width="490" height="344"></p>
 <p><strong>Renders a whole isometric tileset sheet -- floor, blocks, ramps, corners -- out of two textures.</strong></p>
 <p>Iso Tileset renders a whole sheet of tileset pieces, floor, blocks, ramps, corners, out of two textures, rather than one texture at a time. It is not a separate renderer: every cell is an Iso Solid drawing one of its own shapes at <strong>Tile width</strong> pixels with the same lamp and outline, which is why a tile cut from this sheet sits next to a loose Iso Solid without reading as two different scenes.</p>
 <p><strong>Sheet</strong> picks the piece list: Blocks 16, floor, cube, half cube, pillar, four ramps, four outer corners, four inner corners, one level, or Terrain 32, the same sixteen plus a second, raised level of ramps and corners and four wedges. <strong>Level height</strong> sets how tall one terrace step reads in pixels, which matters most on Terrain 32's two-level pieces.</p>
@@ -384,7 +384,7 @@
 </ul>
 <hr>
 <h2 id="voxstack">Voxel Stack</h2>
-<p><img src="./graphs/voxstack.gif" alt="Voxel Stack node graph" width="842" height="322"></p>
+<p><img src="./graphs/voxstack.gif" alt="Voxel Stack node graph" width="854" height="322"></p>
 <p><strong>Stacks the cells of an atlas into a voxel model, one layer per cell.</strong></p>
 <p>Voxel Stack turns each cell of an atlas into one layer of a voxel model, from the bottom up, the sprite stacking technique used to fake 3D out of a stack of flat drawings. <strong>Atlas cols</strong> and <strong>Atlas rows</strong> cut the input into cells the way any atlas reader does, and each cell becomes a layer as wide and tall as the cell itself, so this node has no size sliders at all: the model's footprint comes straight from the cell size.</p>
 <p><strong>Layers (0=all)</strong> limits how many cells get used, in case the atlas has more cells than the model needs, a blank row at the end, say; leave it at 0 to stack every cell. <strong>First cell on top</strong> reverses the usual order, useful when the source atlas was drawn top down, as most sprite sheets are, rather than bottom up, as a stack naturally reads.</p>

@@ -43,7 +43,7 @@
 </ul>
 <hr>
 <h2 id="rgbamerge">RGBA Merge</h2>
-<p><img src="./graphs/rgbamerge.gif" alt="RGBA Merge node graph" width="682" height="514"></p>
+<p><img src="./graphs/rgbamerge.gif" alt="RGBA Merge node graph" width="706" height="514"></p>
 <p><strong>Assembles an image taking each channel from the luminance of one input.</strong></p>
 <p>Builds one image from up to four separate ones, each input's luminance landing in one channel: <strong>R</strong> into red, <strong>G</strong> into green, <strong>B</strong> into blue, <strong>A</strong> into alpha. It is the direct inverse of RGBA Split, and the pair is how this engine does channel packing: four independent grayscale masks or height maps go in, one packed texture comes out, ready to export as a single file instead of four.</p>
 <p>Any input left unplugged reads as 0 for R, G or B, and as fully opaque (255) for A, so a Merge with only two of the four wired still produces something sane rather than an empty buffer: two channels carrying real data, the third dark, full opacity. There are no parameters to set; the whole node is its four wires.</p>

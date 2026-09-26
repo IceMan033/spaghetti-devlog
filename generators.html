@@ -502,7 +502,7 @@
 </ul>
 <hr>
 <h2 id="atlas">Atlas</h2>
-<p><img src="./graphs/atlas.gif" alt="Atlas node graph" width="442" height="322"></p>
+<p><img src="./graphs/atlas.gif" alt="Atlas node graph" width="466" height="322"></p>
 <p><strong>Crops one cell from a sheet split into columns and rows.</strong></p>
 <p>Crops one cell out of a sprite sheet split into <strong>Cols</strong> x <strong>Rows</strong>, or the whole sheet when <strong>Cell</strong> is 0. It is the plain, host-independent way to pull a single frame or tile out of a sheet that was not authored as an Aseprite tileset.</p>
 <p><strong>Cell</strong> is 1-based and wraps at the sheet's own cell count, so animating it across more than <strong>Cols</strong> x <strong>Rows</strong> loops rather than reading garbage. <strong>Fit</strong> decides what happens if the cropped cell does not match this node's own canvas size: Stretch resamples it, Center places it at 1:1 and crops or pads, Tile repeats it at 1:1, the one to use when a cell is meant to be smaller than the working canvas and repeated rather than blown up.</p>
